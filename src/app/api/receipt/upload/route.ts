@@ -30,8 +30,16 @@ export async function POST(req: Request) {
     const filePath = path.join(process.cwd(), "public/uploads", fileName);
     await writeFile(filePath, buffer);
 
-    const fileUrl = `/uploads/${fileName}`;
-    const fileType = file.type.startsWith("IMAGE/") ? "IMAGE" : "PDF";
+    const STORAGE_BASE_URL = process.env.STORAGE_BASE_URL || "";
+    const STORAGE_UPLOAD_PATH = process.env.STORAGE_UPLOAD_PATH || "/uploads";
+
+    const fileUrl = `${STORAGE_BASE_URL}${STORAGE_UPLOAD_PATH}/${fileName}`;
+    const mime = file.type?.toLowerCase() || "";
+
+    let fileType = "PDF";
+    if (mime.startsWith("image/")) {
+      fileType = "IMAGE";
+    }
 
     const receipt = await prisma.receipt.create({
       data: {

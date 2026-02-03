@@ -1,19 +1,34 @@
 // app/api/admin/shop/upload/route.ts
 import { NextResponse } from "next/server";
+import {
+  getUploadFolder,
+  getLocalPath,
+  ensureDir,
+  makePublicUrl,
+} from "@/lib/storage";
 import fs from "fs";
-import path from "path";
 
 export async function POST(req: Request) {
-  const formData = await req.formData();
-  const file = formData.get("file") as File;
-  if (!file) return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+  try {
+    const formData = await req.formData();
+    const file = formData.get("file") as File;
+    if (!file) return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
 
-  const fileName = `${Date.now()}-${file.name}`;
-  const filePath = path.join(process.cwd(), "public/uploads/admin/shop", fileName);
+    const folder = getUploadFolder("shop");
+    const fileName = `${Date.now()}-${file.name}`;
+    
+    
+    const localPath = getLocalPath(folder, fileName);
+    ensureDir(localPath);
+    
+    const buffer = Buffer.from(await file.arrayBuffer());
+    fs.writeFileSync(localPath, buffer);
 
-  const buffer = Buffer.from(await file.arrayBuffer());
-  fs.mkdirSync(path.dirname(filePath), { recursive: true });
-  fs.writeFileSync(filePath, buffer);
+    const publicUrl = makePublicUrl(folder, fileName);
 
-  return NextResponse.json({ path: `/uploads/admin/shop/${fileName}` });
+    return NextResponse.json({ path: publicUrl });
+  } catch (e: any) {
+    console.error("❌ Upload shop error:", e);
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
 }

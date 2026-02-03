@@ -3,12 +3,10 @@
 import { useEffect, useState } from 'react';
 import GreenCard from '@/components/GreenCard/page';
 import { HiUserCircle } from "react-icons/hi2";
-import { FaStar } from "react-icons/fa6";
 import Image from "next/image";
 import Link from 'next/link';
 import { RiCoupon2Fill } from "react-icons/ri";
 import { TbCoinBitcoinFilled } from "react-icons/tb";
-import { IoIosArrowDropright } from "react-icons/io";
 import Loading from '@/components/loading';
 
 // Define the structure for a single coupon
@@ -22,6 +20,7 @@ interface CouponData {
     name: string;
     expiresAt: string;
     imageUrl: string;
+    activeCouponCount: string;
   };
 }
 
@@ -36,18 +35,23 @@ interface UserProfileData {
   occupation?: string;
   branch?: { name: string };
   residenceType?: string;
-  houseNumber?: string;
-  alley?: string;
+  address: string;
+  //houseNumber?: string;
+  //alley?: string;
   subDistrict?: string;
   district?: string;
   postalCode?: string;
   avatar?: string;
   point: number;
-  unusedCouponCount: number;
+  activeCouponCount: number;
   coupons: CouponData[]; // Changed from 'coupon: number' to 'coupons: CouponData[]'
   totalSpending: number;
   referralCode: string;
   referredBy?: string;
+}
+
+interface Props {
+  showOn?: "mobile" | "desktop" | "both";
 }
 
 const getAvatarUrl = (avatar?: string) => {
@@ -62,8 +66,15 @@ const getAvatarUrl = (avatar?: string) => {
   return `/user/profile/${avatar}`;
 };
 
-export default function UserProfile() {
+export default function UserProfile({ showOn = "mobile" }: Props) {
   const [user, setUser] = useState<UserProfileData | null>(null);
+
+  const visibilityClass =
+  showOn === "mobile"
+    ? "block md:hidden"
+    : showOn === "desktop"
+    ? "hidden md:block"
+    : "block";
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -85,19 +96,20 @@ export default function UserProfile() {
   const avatarUrl = getAvatarUrl(user.avatar);
 
   return (
+  <div className={visibilityClass}>
     <GreenCard title="โปรไฟล์ของคุณ">
-      <div className="flex flex-col gap-4">
-        <div className="flex justify-between w-full gap-4">
-          <div className="w-50% z-10 flex flex-row text-center items-center gap-2 bg-white p-2 border border-gray-100 rounded-lg shadow-lg">
-            <Link className="w-full flex flex-row items-center gap-2 text-lg font-semibold" href="/history/point">
+      <div className="flex flex-col gap-2">
+        <div className="flex justify-between w-full gap-2">
+          <div className="w-50% z-10 flex flex-row text-center items-center gap-2 bg-white p-1 border border-gray-100 rounded-lg shadow-lg">
+            <Link className="w-full flex flex-row items-center gap-1 text-lg font-semibold" href="/profile/point">
               <div className="md:pr-4 pr-2 border-r border-gray-400">
-                <TbCoinBitcoinFilled className='text-paseo' size={24}/>
+                <TbCoinBitcoinFilled className='text-paseo' size={20}/>
               </div>
 
               <div className="flex flex-row justify-center items-center w-full">
-                <span className="text-sm font-semibold text-black">
+                <span className="text-xs leading-none font-semibold text-black">
                   {user.point} 
-                  <span className="text-xs font-semibold text-black"> พอยท์</span>
+                  <span className="text-xs leading-none font-semibold text-black"> พอยท์</span>
                 </span>
               </div>
               
@@ -105,20 +117,20 @@ export default function UserProfile() {
             </Link>
           </div>
 
-          <div className="w-50% z-10 flex flex-row text-center items-center gap-2 bg-white p-2 border border-gray-100 rounded-lg shadow-lg">
-              <Link className="w-full flex flex-row items-center gap-2 text-lg font-semibold" href="/profile/coupon">
-                <div className="md:pr-4 pr-2 border-r border-gray-400">
-                  <RiCoupon2Fill className='text-paseo' size={24} />
-                </div>
+          <div className="w-50% z-10 flex flex-row text-center items-center gap-2 bg-white p-1 border border-gray-100 rounded-lg shadow-lg">
+            <Link className="w-full flex flex-row items-center gap-1 text-lg font-semibold" href="/profile/coupon">
+              <div className="md:pr-4 pr-2 border-r border-gray-400">
+                <RiCoupon2Fill className='text-paseo' size={20} />
+              </div>
 
-                <div className="flex flex-row justify-center items-center w-full">
-                  <span className="text-sm font-semibold text-black">
-                    {user.unusedCouponCount} 
-                    <span className="text-xs font-semibold text-black"> คูปอง</span>
-                  </span>
-                </div>
-                
-              </Link>
+              <div className="flex flex-row justify-center items-center w-full">
+                <span className="text-xs leading-none font-semibold text-black">
+                  {user.activeCouponCount} 
+                  <span className="text-xs leading-none font-semibold text-black"> คูปอง</span>
+                </span>
+              </div>
+              
+            </Link>
           </div>
         </div>
               
@@ -128,22 +140,22 @@ export default function UserProfile() {
 
                       <div className="w-full picture-section flex flex-row justify-center">
                         {avatarUrl ? (
-                              <Image
-                              src={avatarUrl}
-                              alt={`${user.name}'s avatar`}
-                              width={72}
-                              height={72}
-                              priority
-                              className="rounded-full object-cover shadow-sm w-16 h-16 md:w-20 md:h-20 border border-gray-300 shadow"
-                              />
-                          ) : (
-                              <HiUserCircle size={72} className="bg-white text-paseo rounded-full" />
-                          )}
+                          <Image
+                            src={avatarUrl}
+                            alt={`${user.name}'s avatar`}
+                            width={72}
+                            height={72}
+                            priority
+                            className="rounded-full object-cover shadow-sm w-16 h-16 md:w-20 md:h-20 border border-gray-300 shadow"
+                          />
+                        ) : (
+                            <HiUserCircle size={72} className="bg-white text-paseo rounded-full" />
+                        )}
                       </div>
                       
                   </div>
       
-                  <div className="z-10 w-70% flex flex-col gap-2">
+                  <div className="z-10 w-70% flex flex-col gap-1">
 
                     <div className="w-full flex flex-col">
                         <p className="text-base font-semibold">{user.name}</p>
@@ -152,25 +164,23 @@ export default function UserProfile() {
                     <div className="w-full flex flex-row gap-2">
 
                       <div className="w-50% flex flex-col">
-                        <p className="text-xs font-bold underline underline-offset-1">เบอร์โทรศัพท์​</p>
-                        <p className="text-sm">{user.phone}</p>
+                        <p className="text-xs leading-1 font-bold underline underline-offset-1">เบอร์โทรศัพท์​</p>
+                        <p className="text-sm leading-none">{user.phone}</p>
                       </div>
 
                       <div className="w-50% flex flex-col">
-                        <p className="text-xs font-bold underline underline-offset-1">วันเกิด</p>
-                        <p className="text-sm">{user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString("th-TH") : "-"}</p>
+                        <p className="text-xs leading-1 font-bold underline underline-offset-1">วันเกิด</p>
+                        <p className="text-sm leading-none">{user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString("th-TH") : "-"}</p>
                       </div>
 
                     </div>
-
-                    
 
                   </div>
                   
               </div>
           </div>
-          
-          
+
     </GreenCard>
+  </div>
   );
 }

@@ -1,8 +1,7 @@
 // components/NewHomePage.tsx
 'use client';
 
-import { useState } from 'react';
-import Image from 'next/image';
+import { useState, useEffect } from 'react';
 
 import HomeTabPopup from '@/components/HomeTabPopup/page';
 import UserProfile from '@/components/UserProfile/page';
@@ -13,6 +12,7 @@ import CampaignList from '@/components/CampaignList/page';
 import CouponList from '@/components/CouponList/page';
 import BannerHome from "@/components/BannerHome/page"
 import HeaderMobile from '@/components/HeaderMobile/page';
+import { AiOutlineExclamationCircle } from "react-icons/ai";
 
 interface NewHomePageProps {
   user: {
@@ -41,16 +41,33 @@ export default function NewHomePage({ user }: NewHomePageProps) {
     setIsPopupOpen(false);
   };
 
+  useEffect(() => {
+    if (!isPopupOpen) return;
+
+    const scrollY = window.scrollY;
+
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+
+    return () => {
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      window.scrollTo(0, scrollY);
+    };
+  }, [isPopupOpen]);
+
 
 
   return (
     <div className="max-w-2xl mx-auto p-0 mb-20 md:mt-10 md:mb-20 mb-4 rounded-xl">
       <HeaderMobile showBack={false} />
 
-      <div className="w-full px-0 md:pt-6 md:p-10 md:pb-0">
+      <div className="w-full px-0 md:pt-6 pt-12 md:p-10 md:pb-0">
 
         <div className="mb-0 pt-4 px-6 md:px-10">
-          <UserProfile />
+          <UserProfile showOn="mobile" />
         </div>
 
       </div>
@@ -61,22 +78,16 @@ export default function NewHomePage({ user }: NewHomePageProps) {
 
       <div className="w-full pt-4 p-4 md:p-10 rounded-xl rounded-t-5xl bg-white relative shadow-sm">
 
-        <div className="w-full pt-4 rounded-xl bg-white relative">
-          <div className="flex flex-col items-center justify-center gap-1">
-            <h3 className="text-gray-400">BEST COMMUNITY MALL IN BANGKOK</h3>
-            <button
-              onClick={handlePopupOpen}
-              className="flex items-center gap-2"
-            >
-              <Image
-                priority
-                src="/icon/icon-alert.png"
-                alt="Thepaseo"
-                width={20}
-                height={20}
-              />
-            </button>
-          </div>
+        <div className="w-full mb-4 rounded-xl bg-white relative flex flex-col items-center">
+          <button
+            onClick={handlePopupOpen}
+            className="bg-gray-100 px-2 py-1 rounded-full border border-gray-200"
+          >
+            <h3 className="text-xs text-gray-500 text-center flex gap-1 items-center">
+              <AiOutlineExclamationCircle size={16} />
+              BEST COMMUNITY MALL IN BANGKOK
+            </h3>  
+          </button>
           <HomeTabPopup
             isOpen={isPopupOpen}
             onClose={() => setIsPopupOpen(false)}
@@ -89,7 +100,7 @@ export default function NewHomePage({ user }: NewHomePageProps) {
         </div>
 
         <div className="p-0 max-w-5xl mx-auto mb-6">
-            <RewardList />
+          <RewardList />
         </div>
 
         <div className="p-0 max-w-5xl mx-auto mb-6">
@@ -99,9 +110,6 @@ export default function NewHomePage({ user }: NewHomePageProps) {
         <div className="p-0 max-w-5xl mx-auto mb-6">
           <EventList />
         </div>
-        
-        
-        
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
       </div>

@@ -57,7 +57,6 @@ export default function BannerHomePage() {
 
   return (
     <>
-      {/* ซ่อนทั้งหมดถ้า loading หรือไม่มีแบนเนอร์ */}
       {loading || banners.length === 0 ? null : (
         <div className="embla w-full overflow-hidden rounded-2xl shadow" ref={emblaRef}>
           <div className="embla__container h-full flex">
@@ -72,7 +71,7 @@ export default function BannerHomePage() {
                   className="w-full flex aspect-square items-center justify-center"
                 >
                   <Image
-                    src={banner.imageUrl}
+                    src={banner.imageUrl || "/main/no-image.png"}
                     alt={banner.title}
                     width={600}
                     height={600}

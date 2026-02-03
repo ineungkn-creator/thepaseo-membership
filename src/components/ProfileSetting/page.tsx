@@ -18,8 +18,9 @@ interface ProfileSettingData {
   occupation?: string;
   branch?: { name: string };
   residenceType?: string;
-  houseNumber?: string;
-  alley?: string;
+  address: string;
+  //houseNumber?: string;
+  //alley?: string;
   subDistrict?: string;
   district?: string;
   postalCode?: string;
@@ -48,17 +49,17 @@ export default function ProfileSetting() {
 
   return (
     <GreenCard title="โปรไฟล์ของคุณ">
-        <div className="profile-setting p-4 mb:p-2 bg-gray-50 rounded-xl shadow-sm">
+        <div className="profile-setting p-4 mb:p-2 bg-gray-50 rounded-xl shadow border border-gray-100">
             <div className="profile-setting-header flex flex-row justify-between items-center mb-4">
                 <div className="profile-setting-header-1 flex flex-row items-center gap-2">
-                    <FaAddressCard className="text-paseo" size={32}/>
-                    <span className="text-base font-bold">แก้ไขข้อมูลส่วนตัว</span>
+                    <FaAddressCard className="text-paseo" size={24}/>
+                    <span className="text-sm font-bold">แก้ไขข้อมูลส่วนตัว</span>
                 </div>
                 
                 
                 <div className="profile-setting-header-2 flex flex-row items-center gap-2">
-                    <Link href="/profile/edit" className="flex items-center gap-1 text-sm font-bold">
-                      <FaEdit className="text-paseo" size={20}/>
+                    <Link href="/profile/edit" className="flex items-center gap-1 text-xs font-bold">
+                      <FaEdit className="text-paseo" size={16}/>
                       แก้ไข
                     </Link>
                 </div>
@@ -67,23 +68,23 @@ export default function ProfileSetting() {
             <div className="profile-setting-items">
             
                 <div className="profile-setting-item flex flex-row mb-2">
-                    <h3 className="w-1/4 text-sm font-bold">ชื่อ</h3>
-                    <span className="w-3/4 text-sm">{user.name!}</span>
+                    <h3 className="w-1/4 text-xs font-bold">ชื่อ</h3>
+                    <span className="w-3/4 text-xs">{user.name!}</span>
                 </div>
 
                 <div className="profile-setting-item flex flex-row mb-2">
-                    <h3 className="w-1/4 text-sm font-bold">อีเมลล์</h3>
-                    <span className="w-3/4 text-sm">{user.email}</span>
+                    <h3 className="w-1/4 text-xs font-bold">อีเมลล์</h3>
+                    <span className="w-3/4 text-xs">{user.email}</span>
                 </div>
 
                 <div className="profile-setting-item flex flex-row mb-2">
-                    <h3 className="w-1/4 text-sm font-bold">วันเกิด</h3>
-                    <span className="w-3/4 text-sm">{user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString("th-TH") : "-"}</span>
+                    <h3 className="w-1/4 text-xs font-bold">วันเกิด</h3>
+                    <span className="w-3/4 text-xs">{user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString("th-TH") : "-"}</span>
                 </div>
 
                 <div className="profile-setting-item flex flex-row mb-2">
-                    <h3 className="w-1/4 text-sm font-bold">เบอร์โทรศัพท์</h3>
-                    <span className="w-3/4 text-sm">{user.phone}</span>
+                    <h3 className="w-1/4 text-xs font-bold">เบอร์โทรศัพท์</h3>
+                    <span className="w-3/4 text-xs">{user.phone}</span>
                 </div>
             </div>
         </div>

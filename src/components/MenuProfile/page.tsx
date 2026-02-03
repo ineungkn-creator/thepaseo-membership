@@ -30,12 +30,12 @@ const MenuProfile = () => {
     },
     {
       label: "สะสมพ้อยท์",
-      path: "/history/upload",
+      path: "/profile/upload",
       icon: <MdOutlineControlPointDuplicate className="mb-1" size={24} />,
     },
     {
       label: "ประวัติพอยท์",
-      path: "/history/point",
+      path: "/profile/point",
       icon: <FaHistory className="mb-1" size={24} />,
     },
   ];
@@ -71,7 +71,7 @@ const MenuProfile = () => {
           <Link
             key={item.path}
             href={item.path}
-            className={`${getButtonClass(item.path)} ${isFavorite ? "hidden md:block" : ""}`}
+            className={`${getButtonClass(item.path)} ${isFavorite ? "hidden md:flex" : ""}`}
           >
             {/* ใช้ React.cloneElement เพื่อเพิ่ม className ให้ icon */}
             {React.cloneElement(item.icon, {

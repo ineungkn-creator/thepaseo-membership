@@ -9,13 +9,16 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import Loading from '@/components/loading';
 import { CalendarIcon } from "lucide-react";
+
+import SimpleSelect from '@/components/form/SimpleSelect'
+import FormField from '@/components/form/FormField'
+import ThaiAddressSelect from '@/components/address/ThaiAddressSelect'
 
 interface Interest {
   id: string;
@@ -31,8 +34,9 @@ interface ProfileForm {
   gender: string;
   occupation: string;
   residenceType: string;
-  houseNumber: string;
-  alley: string;
+  address: string;
+  //houseNumber: string;
+  //alley: string;
   subDistrict: string;
   district: string;
   province: string;
@@ -56,8 +60,9 @@ export default function ProfileEditPage() {
     gender: '',
     occupation: '',
     residenceType: '',
-    houseNumber: '',
-    alley: '',
+    address: '',
+    //houseNumber: '',
+    //alley: '',
     subDistrict: '',
     district: '',
     province: '',
@@ -108,8 +113,23 @@ export default function ProfileEditPage() {
       const data = await res.json();
       if (data.user) {
         setForm({
-          ...form,
-          ...data.user,
+          avatar: data.user.avatar ?? '',
+          name: data.user.name ?? '',
+          phone: data.user.phone ?? '',
+          email: data.user.email ?? '',
+          dateOfBirth: data.user.dateOfBirth
+            ? new Date(data.user.dateOfBirth).toISOString().split('T')[0]
+            : '',
+          gender: data.user.gender ?? '',
+          occupation: data.user.occupation ?? '',
+          residenceType: data.user.residenceType ?? '',
+          address: data.user.address ?? '',
+          subDistrict: data.user.subDistrict ?? '',
+          district: data.user.district ?? '',
+          province: data.user.province ?? '',
+          postalCode: data.user.postalCode ?? '',
+          branchId: data.user.branchId ?? '',
+          interests: data.user.interests?.map((i: any) => i.id) ?? [],
         });
         setPreview(data.user.avatar || null);
       }
@@ -193,236 +213,244 @@ export default function ProfileEditPage() {
   }
 
   return (
-    <div className="h-full max-w-2xl mx-auto p-0 mt-0 mb-20 md:mt-20 md:mb-20 mb-4 bg-white md:rounded-xl">
-      <div className="flex flex-row justify-center relative pt-9 pb-6 bg-paseo">
-        <div className="absolute left-2 top-6">
-          <BackButton className="mb-4" />
-        </div>
-        <h1 className="text-xl font-bold text-white mb-4">แก้ไขข้อมูลส่วนตัว</h1>
+    <div className="h-full max-w-2xl mx-auto p-0 mt-0 mb-4 md:mt-0 md:mb-20 mb-4 bg-white">
+      <div className="flex flex-row justify-start relative pt-4 pb-4 pl-2 rounded-t-xl">
+        <h1 className="text-xl font-bold text-paseo">แก้ไขข้อมูลส่วนตัว</h1>
       </div>
 
-      <div className="w-full pt-4 p-4 rounded-xl bg-white -mt-5 rounded-xl shadow-sm flex flex-row justify-center relative my-4 p-4">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="mb-4 relative overflow-hidden">
-            <p className="font-semibold mb-2">รูปโปรไฟล์</p>
-            <div className="flex items-center gap-4">
-              {form.avatar ? (
-                <Image
-                  width={600}
-                  height={600}
-                  src={
-                    form.avatar.startsWith('http')
-                      ? form.avatar
-                      : `/user/profile/${form.avatar}`
-                  }
-                  alt="avatar"
-                  className="w-20 h-20 rounded-full object-cover border"
-                  onError={() => setPreview(null)}
+      <div className="w-full rounded-xl flex flex-row justify-center relative my-0">
+        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-8">
+
+          <div className="profile-image md:py-6 md:px-6 p-4 rounded-3xl shadow-sm bg-gray-50 border border-gray-200">
+            <div className="mb-4 relative overflow-hidden">
+              <p className="font-semibold mb-2">รูปโปรไฟล์</p>
+              <div className="flex items-center gap-4">
+                {form.avatar ? (
+                  <Image
+                    width={600}
+                    height={600}
+                    src={
+                      form.avatar.startsWith('http')
+                        ? form.avatar
+                        : `/user/profile/${form.avatar}`
+                    }
+                    alt="avatar"
+                    className="w-16 h-16 rounded-full object-cover border"
+                    onError={() => setPreview(null)}
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+                    ไม่มีรูป
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="border p-2 rounded-lg w-full"
                 />
-              ) : (
-                <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
-                  ไม่มีรูป
-                </div>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarChange}
-                className="border p-2 rounded-lg w-full"
+              </div>
+            </div>
+            <FormField label="ชื่อที่แสดง" required>
+              <Input
+                type="text"
+                placeholder="ชื่อที่แสดง *"
+                name="name"
+                className="w-full pt-10 pb-4 pl-2 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                required
               />
-            </div>
-          </div>
+            </FormField>
 
-          <Input
-            type="text"
-            placeholder="ชื่อที่แสดง *"
-            name="name"
-            className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-          />
+            <div className="grid grid-cols-2 gap-2">
+              <FormField label="วันเกิด" required>
+                <Popover open={open} onOpenChange={setOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={`w-full justify-between rounded-xl bg-gray-100 font-normal pt-10 pb-4 ${
+                        !date ? 'text-gray-400' : ''
+                      }`}
+                    >
+                      {date
+                        ? format(date, 'dd MMMM yyyy', { locale: th })
+                        : 'เลือกวันเกิด'}
+                      <CalendarIcon className="ml-2 h-4 w-4 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0 bg-white" align="start">
+                    <Calendar
+                      className="w-80"
+                      mode="single"
+                      captionLayout="dropdown"
+                      selected={date}
+                      onSelect={handleDateChange}
+                      fromYear={1950}
+                      toYear={new Date().getFullYear()}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </FormField>
 
-          <div className="grid grid-cols-2 gap-2">
-            <Popover open={open} onOpenChange={setOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={`w-full justify-between rounded-xl bg-gray-100 font-normal ${
-                    !date ? 'text-gray-400' : ''
-                  }`}
-                >
-                  {date
-                    ? format(date, 'dd MMMM yyyy', { locale: th })
-                    : 'เลือกวันเกิด *'}
-                  <CalendarIcon className="ml-2 h-4 w-4 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0 bg-white" align="start">
-                <Calendar
-                  className="w-80"
-                  mode="single"
-                  captionLayout="dropdown"
-                  selected={date}
-                  onSelect={handleDateChange}
-                  fromYear={1950}
-                  toYear={new Date().getFullYear()}
+              <FormField label="เพศ" required>
+                <SimpleSelect
+                  value={form.gender}
+                  placeholder="เลือกเพศ"
+                  onChange={(value) => setForm({ ...form, gender: value })}
+                  options={[
+                    { value: 'MALE', label: 'ชาย' },
+                    { value: 'FEMALE', label: 'หญิง' },
+                    { value: 'OTHER', label: 'อื่นๆ' },
+                  ]}
                 />
-              </PopoverContent>
-            </Popover>
+              </FormField>
+            </div>
 
-            <Select
-              value={form.gender}
-              onValueChange={(value) => setForm({ ...form, gender: value })}
-            >
-              <SelectTrigger className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo appearance-none">
-                <SelectValue placeholder="เพศ *" />
-              </SelectTrigger>
-              <SelectContent className="bg-white w-full">
-                <SelectItem value="MALE">ชาย</SelectItem>
-                <SelectItem value="FEMALE">หญิง</SelectItem>
-                <SelectItem value="OTHER">อื่นๆ</SelectItem>
-              </SelectContent>
-            </Select>
+            <FormField label="เบอร์โทรศัพท์" required>
+              <Input
+                disabled
+                type="text"
+                placeholder="เบอร์โทรศัพท์ *"
+                name="phone"
+                className="w-full pt-10 pb-4 pl-2 pr-4 border rounded-xl text-gray-400 bg-gray-100 focus:outline-none focus:ring focus:ring-paseo"
+                value={form.phone}
+                required
+              />
+            </FormField>
+
+            <FormField label="อีเมล" required>
+              <Input
+                disabled
+                type="email"
+                placeholder="อีเมล *"
+                name="email"
+                className="w-full pt-10 pb-4 pl-2 pr-4 border rounded-xl text-gray-400 bg-gray-100 focus:outline-none focus:ring focus:ring-paseo"
+                value={form.email}
+                required
+              />
+            </FormField>
+
+            <FormField label="อาชีพ" required>
+              <SimpleSelect
+                value={form.occupation}
+                placeholder="อาชีพ *"
+                onChange={(value) => setForm({ ...form, occupation: value })}
+                options={[
+                  { value: 'STUDENT', label: 'นักศึกษา' },
+                  { value: 'PRIVATE_EMPLOYEE', label: 'พนักงานเอกชน' },
+                  { value: 'STATE_ENTERPRISE', label: 'พนักงานรัฐวิสาหกิจ' },
+                  { value: 'FREELANCER', label: 'อาชีพอิสระ' },
+                  { value: 'BUSINESS_OWNER', label: 'เจ้าของกิจการ' },
+                  { value: 'HOMEMAKER', label: 'พ่อบ้าน - แม่บ้าน' },
+                  { value: 'OTHER', label: 'อื่นๆ' },
+                ]}
+              />
+            </FormField>
+
+          </div>
+          
+          
+          <div className="profile-address md:py-6 md:px-6 p-4 rounded-3xl shadow-sm bg-gray-50 border border-gray-200">
+            <FormField label="ที่อยู่" required>
+              <SimpleSelect
+                value={form.residenceType}
+                placeholder="ที่อยู่ *"
+                onChange={(value) => setForm({ ...form, residenceType: value })}
+                options={[
+                  { value: 'TOWNHOUSE', label: 'ทาวน์เฮาส์' },
+                  { value: 'CONDO', label: 'คอนโด' },
+                  { value: 'SINGLE_HOUSE', label: 'บ้านเดี่ยว' },
+                ]}
+              />
+            </FormField>
+
+            <FormField label="ที่อยู่" required>
+              <Input
+                type="text"
+                placeholder="ที่อยู่ *"
+                name="address"
+                className="w-full pt-10 pb-4 pl-2 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo"
+                onChange={(e) => setForm({ ...form, address: e.target.value })}
+                value={form.address}
+              />
+            </FormField>
+
+            {/* <FormField label="บ้านเลขที่" required>
+              <Input
+                type="text"
+                placeholder="บ้านเลขที่ *"
+                name="houseNumber"
+                className="w-full pt-10 pb-4 pl-2 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo"
+                onChange={(e) => setForm({ ...form, houseNumber: e.target.value })}
+                value={form.houseNumber}
+              />
+            </FormField>
+
+            <FormField label="ซอย" required>
+              <Input
+                type="text"
+                placeholder="ซอย *"
+                name="alley"
+                className="w-full pt-10 pb-4 pl-2 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo"
+                onChange={(e) => setForm({ ...form, alley: e.target.value })}
+                value={form.alley}
+              />
+            </FormField> */}
+
+            <ThaiAddressSelect
+                value={{
+                  province: form.province,
+                  district: form.district,
+                  subDistrict: form.subDistrict,
+                  postalCode: form.postalCode,
+                }}
+                onChange={(addr) =>
+                  setForm(f => ({
+                    ...f,
+                    ...addr,
+                  }))
+                }
+              />
           </div>
 
-          <Input
-            disabled
-            type="text"
-            placeholder="เบอร์โทรศัพท์ *"
-            name="phone"
-            className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-xl text-gray-400 bg-gray-100 focus:outline-none focus:ring focus:ring-paseo"
-            value={form.phone}
-            required
-          />
+          <div className="profile-other md:py-6 md:px-6 p-4 rounded-3xl shadow-sm bg-gray-50 border border-gray-200">
+            <FormField label="สาขาที่ทำการสมัคร" required>
+              <SimpleSelect
+                value={form.branchId}
+                placeholder="เลือกสาขาที่ทำการสมัคร *"
+                onChange={(value) => setForm({ ...form, branchId: value })}
+                options={branches.map((b) => ({
+                  value: b.id,
+                  label: b.name,
+                }))}
+              />
+            </FormField>
 
-          <Input
-            disabled
-            type="email"
-            placeholder="อีเมล *"
-            name="email"
-            className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-xl text-gray-400 bg-gray-100 focus:outline-none focus:ring focus:ring-paseo"
-            value={form.email}
-            required
-          />
-
-          <Select
-            value={form.occupation}
-            onValueChange={(value) => setForm({ ...form, occupation: value })}
-          >
-            <SelectTrigger className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo appearance-none">
-              <SelectValue placeholder="อาชีพ *" />
-            </SelectTrigger>
-            <SelectContent className="bg-white w-full">
-              <SelectItem value="STUDENT">นักศึกษา</SelectItem>
-              <SelectItem value="PRIVATE_EMPLOYEE">พนักงานเอกชน</SelectItem>
-              <SelectItem value="STATE_ENTERPRISE">พนักงานรัฐวิสาหกิจ</SelectItem>
-              <SelectItem value="FREELANCER">อาชีพอิสระ</SelectItem>
-              <SelectItem value="BUSINESS_OWNER">เจ้าของกิจการ</SelectItem>
-              <SelectItem value="HOMEMAKER">พ่อบ้าน - แม่บ้าน</SelectItem>
-              <SelectItem value="OTHER">อื่นๆ</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={form.residenceType}
-            onValueChange={(value) => setForm({ ...form, residenceType: value })}
-          >
-            <SelectTrigger className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo appearance-none">
-              <SelectValue placeholder="ที่อยู่ *" />
-            </SelectTrigger>
-            <SelectContent className="bg-white w-full">
-              <SelectItem value="TOWNHOUSE">ทาวเฮาส์</SelectItem>
-              <SelectItem value="CONDO">คอนโด</SelectItem>
-              <SelectItem value="SINGLE_HOUSE">บ้านเดี่ยว</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Input
-            type="text"
-            placeholder="บ้านเลขที่ *"
-            name="houseNumber"
-            className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo"
-            onChange={(e) => setForm({ ...form, houseNumber: e.target.value })}
-            value={form.houseNumber}
-          />
-          <Input
-            type="text"
-            placeholder="ซอย *"
-            name="alley"
-            className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo"
-            onChange={(e) => setForm({ ...form, alley: e.target.value })}
-            value={form.alley}
-          />
-          <Input
-            type="text"
-            placeholder="แขวง *"
-            name="subDistrict"
-            className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo"
-            onChange={(e) => setForm({ ...form, subDistrict: e.target.value })}
-            value={form.subDistrict}
-          />
-          <Input
-            type="text"
-            placeholder="เขต *"
-            name="district"
-            className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo"
-            onChange={(e) => setForm({ ...form, district: e.target.value })}
-            value={form.district}
-          />
-          <Input
-            type="text"
-            placeholder="จังหวัด *"
-            name="province"
-            className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo"
-            onChange={(e) => setForm({ ...form, province: e.target.value })}
-            value={form.province}
-          />
-          <Input
-            type="text"
-            placeholder="รหัสไปรษณีย์ *"
-            name="postalCode"
-            className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo"
-            onChange={(e) => setForm({ ...form, postalCode: e.target.value })}
-            value={form.postalCode}
-          />
-
-          <Select
-            value={form.branchId}
-            onValueChange={(value) => setForm({ ...form, branchId: value })}
-          >
-            <SelectTrigger className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo appearance-none">
-              <SelectValue placeholder="เลือกสาขาที่ทำการสมัคร *" />
-            </SelectTrigger>
-            <SelectContent className="bg-white w-full">
-              {branches.map((b) => (
-                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <div>
-            <p className="font-semibold mb-2">ความสนใจ</p>
-            <div className="flex flex-wrap gap-2">
-              {interests.map((i) => {
-                const selected = form.interests.includes(i.id);
-                return (
-                  <Badge
-                    key={i.id}
-                    onClick={() => toggleInterest(i.id)}
-                    className={cn(
-                      "cursor-pointer rounded-full px-3 py-1 text-sm transition",
-                      selected
-                        ? "bg-paseo text-white hover:bg-paseo-hover"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    )}
-                  >
-                    {i.name}
-                  </Badge>
-                );
-              })}
+            <div>
+              <p className="font-semibold mb-2">ความสนใจ</p>
+              <div className="flex flex-wrap gap-2">
+                {interests.map((i) => {
+                  const selected = form.interests.includes(i.id);
+                  return (
+                    <Badge
+                      key={i.id}
+                      onClick={() => toggleInterest(i.id)}
+                      className={cn(
+                        "cursor-pointer rounded-full px-3 py-1 text-sm transition",
+                        selected
+                          ? "bg-paseo text-white hover:bg-paseo-hover"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      )}
+                    >
+                      {i.name}
+                    </Badge>
+                  );
+                })}
+              </div>
             </div>
           </div>
+          
 
           <Button type="submit" className="w-full text-white p-3 rounded-xl" style={{ backgroundColor: '#9DC93C' }}>
             บันทึก

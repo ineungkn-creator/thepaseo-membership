@@ -13,9 +13,9 @@ interface Props {
 
 export default function HeaderMobile({ showBack = true, showFavorite = true }: Props) {
   return (
-    <div className="relative overflow-hidden py-2 md:hidden">
+    <div className="fixed inset-x-0 top-0 overflow-hidden py-2 md:hidden z-50 blur2 rounded-b-xl shadow-sm border border-gray-200">
       {showBack && (
-        <div className="absolute top-4 left-4">
+        <div className="absolute top-2 left-4">
           <BackButton className="mb-4" />
         </div>
       )}

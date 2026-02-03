@@ -3,43 +3,76 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// GET: Fetch the HelpTerms (assuming single record)
+/**
+ * GET: Fetch HelpTerms (singleton)
+ */
 export async function GET() {
   try {
     const term = await prisma.helpTerms.findFirst();
-    if (!term) {
-      // If no term exists, return an empty object or create one
-      return NextResponse.json({ id: "", description: "" }, { status: 200 });
-    }
-    return NextResponse.json(term, { status: 200 });
+
+    return NextResponse.json(
+      term ?? {
+        description: "",
+        email1: "",
+        email2: "",
+        email3: "",
+        phone1: "",
+        phone2: "",
+        phone3: "",
+      },
+      { status: 200 }
+    );
   } catch (error) {
-    console.error("Error fetching Terms of service:", error);
-    return NextResponse.json({ error: "Failed to fetch terms" }, { status: 500 });
+    console.error("Error fetching HelpTerms:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch HelpTerms" },
+      { status: 500 }
+    );
   }
 }
 
-// PUT: Update the HelpTerms
+/**
+ * PUT: Update HelpTerms (always update the same record)
+ */
 export async function PUT(request: Request) {
   try {
-    const { id, description } = await request.json();
+    const {
+      description,
+      email1,
+      email2,
+      email3,
+      phone1,
+      phone2,
+      phone3,
+    } = await request.json();
 
-    let term;
-    if (id) {
-      // Update existing term
-      term = await prisma.helpTerms.update({
-        where: { id },
-        data: { description },
-      });
-    } else {
-      // Create new term if no ID provided (first-time setup)
-      term = await prisma.helpTerms.create({
-        data: { description },
-      });
-    }
+    const data = {
+      description,
+      email1,
+      email2,
+      email3,
+      phone1,
+      phone2,
+      phone3,
+    };
+
+    const existing = await prisma.helpTerms.findFirst();
+
+    const term = existing
+      ? await prisma.helpTerms.update({
+          where: { id: existing.id },
+          data,
+        })
+      : await prisma.helpTerms.create({
+          data,
+        });
 
     return NextResponse.json(term, { status: 200 });
   } catch (error) {
-    console.error("Error updating Terms of service:", error);
-    return NextResponse.json({ error: "Failed to Terms of service" }, { status: 500 });
+    console.error("Error updating HelpTerms:", error);
+    return NextResponse.json(
+      { error: "Failed to update HelpTerms" },
+      { status: 500 }
+    );
   }
 }

@@ -20,7 +20,7 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const { signupPoints, referralPoints, receiptRateAmount, receiptRatePoints } =
+    const { signupPoints, referralPoints, receiptRateAmount, receiptRatePoints, pointExpireYears } =
       await req.json();
 
     const existingSetting = await prisma.pointSetting.findFirst({
@@ -34,6 +34,7 @@ export async function PATCH(req: Request) {
         referralPoints,
         receiptRateAmount,
         receiptRatePoints,
+        pointExpireYears,
         isDefault: true,
       },
       create: {
@@ -42,6 +43,7 @@ export async function PATCH(req: Request) {
         referralPoints,
         receiptRateAmount,
         receiptRatePoints,
+        pointExpireYears,
         isDefault: true,
       },
     });

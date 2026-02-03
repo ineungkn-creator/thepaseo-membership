@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { PrismaClient, PointType } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authConfig } from "@/lib/auth.config";
+import { redeemPointsFIFO } from "@/lib/point/fifoRedeem";
 
 const prisma = new PrismaClient();
 
@@ -56,8 +57,33 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       pointBalance = await prisma.pointBalance.create({ data: { userId, balance: 0 } });
     }
 
-    if (event.pointCost && pointBalance.balance < event.pointCost) {
-      return NextResponse.json({ error: "แต้มไม่เพียงพอ" }, { status: 400 });
+    const wallets = await prisma.pointWallet.aggregate({
+      where: {
+        userId,
+        AND: [
+          { points: { gt: 0 } },
+          { usedPoints: { lt: prisma.pointWallet.fields.points } },
+          {
+            OR: [
+              { expiresAt: null },
+              { expiresAt: { gt: new Date() } },
+            ],
+          },
+        ],
+      },
+      _sum: {
+        points: true,
+      },
+    });
+
+    const availablePoints = wallets._sum.points ?? 0;
+    const requiredPoints = event.pointCost ?? 0;
+
+    if (availablePoints < requiredPoints) {
+      return NextResponse.json(
+        { error: "แต้มไม่เพียงพอ" },
+        { status: 400 }
+      );
     }
 
     const context = {
@@ -71,7 +97,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       let updatedBalance = pointBalance!.balance;
 
       if (event.pointCost && event.pointCost > 0) {
+        await redeemPointsFIFO({
+          tx,
+          userId,
+          amount: event.pointCost,
+        });
+
         updatedBalance -= event.pointCost;
+
         await tx.pointTransaction.create({
           data: {
             userId,

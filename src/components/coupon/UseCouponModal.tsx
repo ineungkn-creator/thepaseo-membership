@@ -81,15 +81,22 @@ export default function UseCouponModal({ show, onClose, userCouponId }: UseCoupo
       className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50"
       style={{ backdropFilter: "blur(2px)" }}
     >
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center overflow-y-auto py-10">
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center overflow-y-auto py-10">
       <div className="bg-gray-100 max-w-2xl w-full rounded-3xl shadow-lg animate-fade-in">
         {loading && <p className="text-center p-6 text-gray-500">กำลังโหลด...</p>}
         {error && <p className="text-center p-6 text-red-500">{error}</p>}
 
         {coupon && (
-          <>
+          <div className="relative overflow-hidden">
+            <button
+                onClick={onClose}
+                className="absolute top-10 md:right-12 right-6 blur2 border border-gray-300 h-10 w-10 rounded-full text-xl font-bold"
+            >
+                X
+            </button>
+            
             {/* ✅ Redeem Code */}
-            <div className="px-4 pt-4 md:px-10">
+            <div className="px-4 pt-8 md:px-10">
               <div className="bg-white border rounded-xl p-4 text-center">
                 <p className="text-gray-500 text-sm mb-1">รหัสสำหรับใช้คูปอง</p>
                 <p className="text-3xl font-bold tracking-widest">
@@ -97,6 +104,8 @@ export default function UseCouponModal({ show, onClose, userCouponId }: UseCoupo
                 </p>
               </div>
             </div>
+
+            
 
             {/* ✅ รูป */}
             <div className="p-4 md:p-10">
@@ -126,7 +135,7 @@ export default function UseCouponModal({ show, onClose, userCouponId }: UseCoupo
                 {coupon.coupon?.description && (
                   <div className="mb-4">
                     <div
-                      className="prose text-gray-700"
+                      className="text-sm prose text-gray-700"
                       dangerouslySetInnerHTML={{ __html: coupon.coupon?.description }}
                     />
                   </div>
@@ -137,7 +146,7 @@ export default function UseCouponModal({ show, onClose, userCouponId }: UseCoupo
             </div>
 
             {/* ✅ ปุ่มกดใช้คูปอง */}
-            <div className="bg-white border-t p-4 rounded-b-3xl flex flex-col gap-4">
+            <div className="md:relative fixed bottom-0 w-full bg-white border-t p-4 rounded-3xl md:rounded-b-3xl rounded-b-none flex flex-col items-center gap-2">
               {!coupon.used && (
                 <button
                   onClick={() => setShowConfirm(true)}
@@ -154,14 +163,8 @@ export default function UseCouponModal({ show, onClose, userCouponId }: UseCoupo
                     : "ไม่ทราบเวลา"}
                 </p>
               )}
-              <button
-                onClick={onClose}
-                className="btn-cancel w-full"
-              >
-                ปิดหน้าต่าง
-              </button>
             </div>
-          </>
+          </div>
         )}
       </div>
       

@@ -1,7 +1,9 @@
+//api/coupon/[id]/join
 import { NextResponse } from "next/server";
 import { PrismaClient, PointType } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authConfig } from "@/lib/auth.config";
+import { redeemPointsFIFO } from "@/lib/point/fifoRedeem";
 
 const prisma = new PrismaClient();
 
@@ -152,21 +154,28 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       let updatedBalance = balanceRecord!.balance;
 
       // --- หักแต้ม (REDEEM)
-      if (coupon.pointCost && coupon.pointCost > 0) {
-        updatedBalance -= coupon.pointCost;
-        await tx.pointTransaction.create({
-          data: {
-            userId,
-            type: PointType.REDEEM,
-            referenceType: "COUPON",
-            ...contextTx,
-            amount: -coupon.pointCost,
-            balanceAfter: updatedBalance,
-            referenceId: coupon.id,
-            description: `ใช้แต้มเพื่อรับคูปอง: ${coupon.name}`,
-          },
-        });
-      }
+    if (coupon.pointCost && coupon.pointCost > 0) {
+      await redeemPointsFIFO({
+        tx,
+        userId,
+        amount: coupon.pointCost,
+      });
+
+      updatedBalance -= coupon.pointCost;
+
+      await tx.pointTransaction.create({
+        data: {
+          userId,
+          type: PointType.REDEEM,
+          referenceType: "COUPON",
+          ...contextTx,
+          amount: -coupon.pointCost,
+          balanceAfter: updatedBalance,
+          referenceId: coupon.id,
+          description: `ใช้แต้มเพื่อรับคูปอง: ${coupon.name}`,
+        },
+      });
+    }
 
       // --- เพิ่มแต้ม (EARN)
       if (coupon.pointEarn && coupon.pointEarn > 0) {

@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "apis": [
+    {
+      "identifier": "deesmsx",
+      "source": "@deesmsx/v1.0#7zzd1b13lzv3pmjo",
+      "integrity": "sha512-ocYzVV5P0oRvG8dUoIBFECO3OZqmHiIgXRTakZhU9jRK9HcKsb5aAwy7vhHUiHGNJxUxdVcffTqbYpsC8aYDxQ==",
+      "installerVersion": "6.1.3"
+    }
+  ]
+}

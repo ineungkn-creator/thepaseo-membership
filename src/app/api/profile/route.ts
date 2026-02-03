@@ -28,22 +28,16 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    // ✅ ดึงคูปองเฉพาะที่ยังไม่ได้ใช้ (นับเท่านั้น)
-    const unusedCouponCount = await prisma.userCoupon.count({
+    const activeCouponCount = await prisma.userCoupon.count({
       where: {
         userId,
         used: false,
+        coupon: {
+          expiresAt: { gte: new Date() },
+        },
       },
-    })
-
-    // ✅ ดึงรายการคูปองล่าสุด (เช่น 5 ใบล่าสุด)
-    const recentCoupons = await prisma.userCoupon.findMany({
-      where: { userId },
-      include: { coupon: true },
-      orderBy: { assignedAt: "desc" },
-      take: 20,
-    })
-
+    });
+    
     return NextResponse.json({
       user: {
         id: user.id,
@@ -57,8 +51,9 @@ export async function GET() {
         gender: user.gender,
         occupation: user.occupation,
         residenceType: user.residenceType,
-        houseNumber: user.houseNumber,
-        alley: user.alley,
+        address: user.address,
+        //houseNumber: user.houseNumber,
+        //alley: user.alley,
         subDistrict: user.subDistrict,
         district: user.district,
         province: user.province,
@@ -67,21 +62,7 @@ export async function GET() {
         point: user.pointBalance?.balance ?? 0,
 
         // ✅ จำนวนคูปองที่ยังไม่ได้ใช้
-        unusedCouponCount,
-
-        // ✅ แสดงคูปองตัวอย่าง (ถ้าต้องการ)
-        coupons: recentCoupons.map((uc) => ({
-          id: uc.id,
-          used: uc.used,
-          assignedAt: uc.assignedAt,
-          coupon: {
-            id: uc.coupon.id,
-            code: uc.coupon.code,
-            name: uc.coupon.name,
-            expiresAt: uc.coupon.expiresAt,
-            imageUrl: uc.coupon.imageUrl,
-          },
-        })),
+        activeCouponCount,
 
         interests: user.interests.map((interest) => ({
           id: interest.id,
@@ -132,8 +113,9 @@ export async function PATCH(req: Request) {
         gender: body.gender,
         occupation: body.occupation,
         residenceType: body.residenceType,
-        houseNumber: body.houseNumber,
-        alley: body.alley,
+        address: body.address,
+        //houseNumber: body.houseNumber,
+        //alley: body.alley,
         subDistrict: body.subDistrict,
         district: body.district,
         province: body.province,
@@ -189,8 +171,9 @@ export async function PUT(req: Request) {
         dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
         gender: data.gender,
         occupation: data.occupation,
-        houseNumber: data.houseNumber,
-        alley: data.alley,
+        address: data.address,
+        //houseNumber: data.houseNumber,
+        //alley: data.alley,
         subDistrict: data.subDistrict,
         district: data.district,
         province: data.province,

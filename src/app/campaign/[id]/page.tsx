@@ -14,7 +14,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { RiCoupon2Fill } from "react-icons/ri";
 import UserProfile from '@/components/UserProfile/page';
-
 import HeaderMobile from '@/components/HeaderMobile/page';
 
 type Coupon = {
@@ -150,60 +149,60 @@ export default function CampaignSinglePage() {
       <div>
         <HeaderMobile />
       
-        <div className="max-w-2xl mx-auto p-0 -mb-14 md:mt-20 md:-mb-16 rounded-xl">
-          <div className="w-full pt-4 px-10 md:pt-0 md:px-20 md:pb-0">
-            <UserProfile />
+        <div className="max-w-2xl mx-auto -mb-14 md:mt-20 md:-mb-16 pt-16  rounded-xl">
+          <div className="w-full px-10 md:pt-0 md:px-20 md:pb-0">
+            <UserProfile  />
           </div>
         </div>
         <div
           ref={captureRef}
-          className="capture relative max-w-2xl mx-auto p-0 pt-20 bg-gray-100 rounded-t-5xl rounded-b-xl"
+          className="capture relative max-w-2xl mx-auto md:pt-10 md:pb-10 pb-20 md:mb-10 pt-20 bg-gray-100 rounded-t-5xl rounded-b-xl flex flex-col gap-4"
         >
   
-          <div className="p-4 md:p-10">
+          <div className="px-4 md:px-10">
             {campaign.imageUrl &&
             <Image
               width={600}
               height={600}
               src={campaign.imageUrl} alt={campaign.name}
-              className="w-full h-full object-cover rounded-2xl shadow-md"
+              className="w-full h-full object-cover rounded-2xl shadow border border-gray-100"
             />}
   
           </div>
   
-          <div className="p-4 px-4 pt-0 md:p-10 md:pt-0">
-            <div className="flex flex-row justify-between align-start gap-4 bg-white p-6 rounded-2xl shadow-md">
+          <div className="px-4 md:px-10">
+            <div className="flex flex-row justify-between align-start gap-4 bg-white md:p-6 p-4 rounded-2xl shadow border border-gray-100">
               <div className="flex flex-col gap-3">
-              <h1 className="text-lg font-bold">{campaign.name}</h1>
+              <h1 className="text-sm font-bold">{campaign.name}</h1>
               <div className="flex items-center gap-3 text-gray-600">
-                <FaRegCalendarCheck className="text-xl" />
-                <p className="text-base text-gray-500">
+                <FaRegCalendarCheck size={24} />
+                <p className="text-sm text-gray-500">
                   ตั้งแต่ {start_day} - {end_day} {end_month_long} {end_year} นี้
                 </p>
               </div>
 
               {campaign.pointCost > 0 && (
                 <div className="flex flex-row item-center align-center gap-4">
-                  <CiBitcoin className="text-xl" />
+                  <CiBitcoin size={24} />
                   <p>ใช้พอยต์: {campaign.pointCost}</p>
                 </div>
               )}
               {campaign.pointEarn > 0 && (
                 <div className="flex flex-row item-center align-center gap-4">
-                  <CiBitcoin className="text-xl" />
+                  <CiBitcoin size={24} />
                   <p>ได้พอยต์: {campaign.pointEarn}</p>
                 </div>
               )}
               {campaign.joinedCount > 0 && (
                 <div className="flex flex-row item-center align-center gap-4">
-                  <CiBitcoin className="text-xl" />
+                  <CiBitcoin size={24} />
                   <p className="text-gray-500 text-sm">ผู้เข้าร่วม: {campaign.joinedCount}</p>
                 </div>
               )}
               {error && <p className="text-red-500">{error}</p>}
             </div>
 
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center gap-2">
               {session?.user?.id && (
                 <FavoriteButton
                   targetId={campaign.id}
@@ -212,7 +211,7 @@ export default function CampaignSinglePage() {
                 />
               )}
               <button onClick={handleCapture}>
-                <PiDotsThreeOutlineLight className="text-2xl" />
+                <PiDotsThreeOutlineLight size={24} />
               </button>
               <ShareButton title={campaign.name} linkShare={campaign.linkShare} />
             </div>
@@ -221,15 +220,15 @@ export default function CampaignSinglePage() {
           
         </div>
 
-        <div className="p-4 px-4 pt-0 md:p-10 md:pt-0">
-          <div className="flex flex-col justify-between align-start gap-4 bg-white p-6 rounded-2xl shadow-md">
+       <div className="px-4 md:px-10">
+          <div className="flex flex-col justify-between align-start gap-4 bg-white md:p-6 p-4 rounded-2xl shadow border border-gray-100">
 
           {/* Description */}
           {campaign.description && (
             <div>
-              <h3 className="text-lg font-bold mb-2">รายละเอียด</h3>
+              <h3 className="text-sm font-semibold mb-2">รายละเอียด</h3>
               <div
-                className="prose text-base mb-4"
+                 className="prose text-gray-700"
                 dangerouslySetInnerHTML={{ __html: campaign.description }}
               />
             </div>
@@ -239,13 +238,13 @@ export default function CampaignSinglePage() {
 
         </div>
 
-        <div className="p-4 px-4 pt-0 md:p-10 md:pt-0">
-          <div className="flex flex-col justify-between align-start gap-4 bg-white p-6 rounded-2xl shadow-md">
+        <div className="px-4 md:px-10">
+          <div className="flex flex-col justify-between align-start gap-4 bg-white md:p-6 p-4 rounded-2xl shadow border border-gray-100">
           {campaign.terms && (
             <div>
-              <h3 className="text-lg font-bold mb-2">เงื่อนไข</h3>
+              <h3 className="text-sm font-semibold mb-2">เงื่อนไข</h3>
               <div
-                className="prose text-base"
+                className="prose text-sm"
                 dangerouslySetInnerHTML={{ __html: campaign.terms }}
               />
             </div>
@@ -256,9 +255,9 @@ export default function CampaignSinglePage() {
 
       {/* ✅ แสดงคูปองของแคมเปญ */}
       {campaign.coupons?.length > 0 && (
-        <div className="p-4 px-4 pt-0 md:p-10 md:pt-0">
-          <div className="flex flex-col justify-between align-start gap-4 bg-white p-4 rounded-2xl shadow-md">
-          <h2 className="text-lg font-bold mb-3">คูปองในแคมเปญนี้</h2>
+        <div className="px-4 md:px-10">
+          <div className="flex flex-col justify-between align-start gap-4 bg-white md:p-6 p-4 rounded-2xl shadow border border-gray-100">
+          <h3 className="text-sm font-semibold mb-2">คูปองในแคมเปญนี้</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             {campaign.coupons.map((coupon) => {
               const now = new Date();
@@ -350,7 +349,7 @@ export default function CampaignSinglePage() {
                 <div className="w-full flex flex-col gap-2 p-4  bg-gray-100 rounded-b-2xl border-t-2 border-black border-dotted">
                   
                   <button
-                      className={`py-1 w-full rounded-full text-base font-bold flex flex-row align-center justify-center gap-2 hover:bg-paseo-hover hover:text-black ${
+                      className={`py-1 w-full rounded-full text-sm font-bold flex flex-row align-center justify-center gap-2 hover:bg-paseo-hover hover:text-black ${
                           status === "สิ้นสุดแล้ว"
                               ? "bg-gray-300 text-gray-600 cursor-not-allowed"
                               : "bg-paseo text-white"

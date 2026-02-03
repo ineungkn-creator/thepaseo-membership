@@ -1,17 +1,21 @@
-//components/CouponCard
 'use client';
 
 import { useEffect, useState } from 'react';
 import GreenCard from '@/components/GreenCard/page';
 import { RiCoupon2Fill } from "react-icons/ri";
-import Link from 'next/link';
-
 import { MdVerified } from "react-icons/md";
+import Link from 'next/link';
+import Image from 'next/image';
 
-// Define the structure for a single coupon
+import UseCouponModal from "@/components/coupon/UseCouponModal";
+
+/* ==============================
+   TYPES
+============================== */
 interface CouponData {
   id: string;
   used: boolean;
+  status: "ACTIVE" | "USED" | "EXPIRED";
   assignedAt: string;
   coupon: {
     id: string;
@@ -22,121 +26,156 @@ interface CouponData {
   };
 }
 
-// Update the UserProfileData interface to include the full coupons array
-interface UserProfileData {
-  id: string;
-  name: string;
-  phone?: string;
-  email?: string;
-  dateOfBirth?: string;
-  gender?: string;
-  occupation?: string;
-  branch?: { name: string };
-  residenceType?: string;
-  houseNumber?: string;
-  alley?: string;
-  subDistrict?: string;
-  district?: string;
-  postalCode?: string;
-  avatar?: string;
-  point: number;
-  coupons: CouponData[]; // Changed from 'coupon: number' to 'coupons: CouponData[]'
-  totalSpending: number;
-  referralCode: string;
-  referredBy?: string;
-}
-
-const getAvatarUrl = (avatar?: string) => {
-  if (!avatar) return null;
-
-  // ถ้าเป็น URL เต็ม (http หรือ https) → ใช้ได้เลย
-  if (avatar.startsWith("http")) {
-    return avatar;
-  }
-
-  // ถ้าเป็นแค่ชื่อไฟล์ → ชี้ไปที่ public/user/profile
-  return `/user/profile/${avatar}`;
-};
-
+/* ==============================
+   COMPONENT
+============================== */
 export default function CouponCard() {
-  const [user, setUser] = useState<UserProfileData | null>(null);
+  const [coupons, setCoupons] = useState<CouponData[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedCouponId, setSelectedCouponId] = useState<string | null>(null);
 
+  /* ==============================
+     FETCH (ไม่ล้าง list ระหว่างโหลด)
+  ============================== */
+  const fetchCoupons = async (pageNumber: number) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/profile/usercoupon?page=${pageNumber}`);
+      const data = await res.json();
+
+      setCoupons(data.items);            // ⭐ แทนที่ทั้งหน้า
+      setTotalPages(data.totalPages);
+    } catch (err) {
+      console.error("Failed to fetch coupons:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* โหลดเมื่อเปลี่ยนหน้า */
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch('/api/profile');
-        const data = await res.json();
-        if (data.user) setUser(data.user);
-      } catch (err) {
-        console.error("Failed to fetch user profile:", err);
-      }
-    };
-    fetchUser();
-  }, []);
+    fetchCoupons(page);
+  }, [page]);
 
-  if (!user) return <div className="text-center p-6">Loading...</div>;
-
-  const avatarUrl = getAvatarUrl(user.avatar);
-
+  /* ==============================
+     RENDER
+  ============================== */
   return (
-    <GreenCard title="โปรไฟล์ของคุณ">
-      <div className="mt-4">
-        {user.coupons.length > 0 ? (
-          <div className="list-disc list-inside text-gray-700">
-            {user.coupons.map((userCoupon) => {
-              const expired =
-                new Date(userCoupon.coupon.expiresAt) < new Date();
-              return (
-              <div key={userCoupon.id} className="mb-2 border p-4 rounded-lg">
-                <div className="flex justify-between items-center gap-4">
-                  <div className="w-70%">
-                    <p className="font-semibold">{userCoupon.coupon.name}</p>
-                  </div>
+    <>
+      <GreenCard title="คูปองของฉัน">
+        <div className="mt-4">
 
-                  <div className="w-32 text-right">
-                      {userCoupon.used ? (
-                        <span className="inline-flex items-center justify-center w-full px-3 py-1 bg-gray-300 text-gray-500 rounded-lg text-sm gap-1">
-                          <MdVerified size={16} /> ใช้แล้ว
-                        </span>
-                      ) : expired ? (
-                        <span className="inline-flex items-center justify-center w-full px-3 py-1 bg-red-300 text-gray-700 rounded-lg text-sm">
-                          หมดอายุ
-                        </span>
-                      ) : (
-                        <Link
-                          href={`/profile/coupon/${userCoupon.id}`}
-                          className="inline-flex items-center justify-center w-full px-3 py-2 bg-paseo hover:bg-paseo-hover text-white rounded-lg text-sm gap-1"
-                        >
-                          <RiCoupon2Fill size={16} />
-                          <span className="text-white text-xs whitespace-nowrap">ใช้คูปอง</span>
-                          
-                        </Link>
-                      )}
-                    </div>
+          {/* Coupon List */}
+          {coupons.map((userCoupon) => (
+            <div key={userCoupon.id} className="w-full mb-2 border md:p-4 p-2 rounded-lg">
+              <div className="w-full flex flex-row items-start md:gap-4 gap-2">
+                <div className="relative w-40% rounded-xl overflow-hidden">
+                  <Image
+                    src={userCoupon.coupon.imageUrl || "/main/no-image.png"}
+                    alt={userCoupon.coupon.name}
+                    width={ 500 }
+                    height={ 500 }
+                    className="object-cover"
+                  />
                 </div>
 
-                <div className="flex justify-between items-center gap-4 mt-2">
-                  <div className="w-70%">
-                    <p className="text-sm">Code: {userCoupon.coupon.code}</p>
-                  </div>
+                <div className="w-60% flex flex-col md:gap-2 gap-1">
 
-                  <div className="w-30%">
-                    {!userCoupon.used && (
-                    <p className="text-xs text-gray-500 text-right whitespace-nowrap">
-                      หมดอายุ: {new Date(userCoupon.coupon.expiresAt).toLocaleDateString("th-TH")}
-                    </p>
+                  <p className="md:text-base text-sm leading-5 font-semibold">{userCoupon.coupon.name}</p>
+
+                  <p className="md:text-sm text-xs text-gray-500 text-left">
+                    หมดอายุ:{" "}
+                    {new Date(userCoupon.coupon.expiresAt).toLocaleDateString("th-TH")}
+                  </p>
+
+                  <div className="w-full items-start text-center gap-1 mt-1 p-2 rounded-lg bg-gray-100 border">
+                    <p className="md:text-sm text-xs">{userCoupon.coupon.code}</p>
+                  </div>
+                  
+                  
+
+                  <div className="w-full text-center">
+                    {userCoupon.status === "USED" && (
+                      <span className="inline-flex items-center justify-center md:w-60% w-full px-3 md:py-2 py-1 bg-gray-300 text-gray-600 rounded-lg md:text-base text-sm gap-1">
+                        <MdVerified size={16} /> ใช้แล้ว
+                      </span>
+                    )}
+
+                    {userCoupon.status === "EXPIRED" && (
+                      <span className="inline-flex items-center justify-center md:w-60% w-full px-3 md:py-2 py-1 bg-red-300 text-gray-700 rounded-lg md:text-base text-sm">
+                        หมดอายุ
+                      </span>
+                    )}
+
+                    {userCoupon.status === "ACTIVE" && (
+                      <button
+                        onClick={() => {
+                          setSelectedCouponId(userCoupon.id);
+                          setShowModal(true);
+                        }}
+                        className="inline-flex items-center justify-center md:w-60% w-full px-3 md:py-2 py-1 bg-paseo hover:bg-paseo-hover text-white rounded-lg md:text-base text-sm gap-1"
+                      >
+                        <RiCoupon2Fill size={16} />
+                        <span className="text-xs whitespace-nowrap">ใช้คูปอง</span>
+                      </button>
                     )}
                   </div>
+
                 </div>
+                
               </div>
-            );
-            })}
+
+              
+            </div>
+          ))}
+
+          {/* Empty */}
+          {!loading && coupons.length === 0 && (
+            <p className="text-gray-500 text-center">
+              ยังไม่มีคูปอง
+            </p>
+          )}
+
+          {/* Pagination */}
+          <div className="flex justify-between items-center mt-6">
+            <button
+              disabled={page === 1 || loading}
+              onClick={() => setPage(p => p - 1)}
+              className="px-4 py-1 border rounded-xl disabled:opacity-50"
+            >
+              ◀ ก่อนหน้า
+            </button>
+
+            <span className="text-sm text-gray-600">
+              หน้า {page} / {totalPages}
+            </span>
+
+            <button
+              disabled={page === totalPages || loading}
+              onClick={() => setPage(p => p + 1)}
+              className="px-4 py-1 border rounded-xl disabled:opacity-50"
+            >
+              ถัดไป ▶
+            </button>
           </div>
-        ) : (
-          <p className="text-gray-500">No coupons available.</p>
-        )}
+
+          {/* Loading (ไม่กระพริบ) */}
+          {loading && (
+            <p className="text-center text-xs text-gray-400 mt-3">
+              กำลังโหลด...
+            </p>
+          )}
         </div>
-           
-    </GreenCard>
+      </GreenCard>
+
+      <UseCouponModal
+        show={showModal}
+        onClose={() => setShowModal(false)}
+        userCouponId={selectedCouponId}
+      />
+    </>
   );
 }

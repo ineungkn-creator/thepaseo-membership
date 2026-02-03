@@ -1,3 +1,4 @@
+//app/admin/receipts/page.tsx
 "use client"
 
 import React, { useEffect, useState } from "react"
@@ -409,24 +410,17 @@ export default function AdminReceiptsPage() {
                                           <td className="border px-2 py-1">{h.amount}</td>
                                           <td className="border px-2 py-1">{h.status}</td>
                                           <td className="border px-2 py-1">
-                                            {h.fileType === "IMAGE" ? (
+                                            {h.fileUrl ? (
                                               <Link
                                                 href={h.fileUrl}
                                                 target="_blank"
                                                 rel="noreferrer"
                                                 className="text-blue-500 underline"
                                               >
-                                                ดูรูป
+                                                {h.fileType === "IMAGE" ? "ดูรูป" : "ดู PDF"}
                                               </Link>
                                             ) : (
-                                              <Link
-                                                href={h.fileUrl}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="text-blue-500 underline"
-                                              >
-                                                ดู PDF
-                                              </Link>
+                                              <span className="text-gray-400">ไม่มีไฟล์</span>
                                             )}
                                           </td>
                                         </tr>

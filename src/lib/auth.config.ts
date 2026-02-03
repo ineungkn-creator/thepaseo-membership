@@ -46,61 +46,61 @@ export const authConfig: NextAuthOptions = {
     }),
 
     // ✅ USER LOGIN (Phone + OTP)
-  CredentialsProvider({
-    id: "credentials",
-    name: "Credentials",
-    credentials: {
-      phone: { label: "Phone", type: "text" },
-      otp: { label: "OTP", type: "text" },
-      bypassOtp: { label: "Bypass OTP", type: "text" }, // ← เพิ่ม field
-    },
+    CredentialsProvider({
+      id: "credentials",
+      name: "Phone Login",
+      credentials: {
+        phone: { label: "Phone", type: "text" },
+      },
 
-    async authorize(credentials): Promise<any> {
-      if (!credentials) throw new Error("No credentials provided.");
+      async authorize(credentials): Promise<any> {
+        if (!credentials?.phone) {
+          throw new Error("Phone required");
+        }
 
-      const { phone, otp, bypassOtp } = credentials;
+        const phone = credentials.phone;
 
-      const user = await prisma.user.findUnique({ where: { phone } });
-      if (!user) throw new Error("User not found");
-
-      // ✅ กรณี login หลังสมัครเสร็จ → ไม่ต้อง OTP
-      if (bypassOtp === "true") {
-        await prisma.user.update({
+        const user = await prisma.user.findUnique({
           where: { phone },
+        });
+
+        if (!user) {
+          throw new Error("User not found");
+        }
+
+        // ✅ เช็คว่า OTP ถูก verify แล้วหรือยัง
+        const verifiedOtp = await prisma.otpVerification.findFirst({
+          where: {
+            phone,
+            purpose: "VERIFY_PHONE",
+            verifiedAt: { not: null },
+          },
+          orderBy: { createdAt: "desc" },
+        })
+
+        if (!verifiedOtp) {
+          throw new Error("OTP not verified")
+        }
+
+        if (!verifiedOtp) {
+          throw new Error("OTP not verified");
+        }
+
+        // ✅ login สำเร็จ → update lastLogin
+        await prisma.user.update({
+          where: { id: user.id },
           data: { lastLogin: new Date() },
         });
 
         return {
           id: user.id,
-          email: user.email,
-          phone: user.phone,
-          role: user.role,
           name: user.name,
+          phone: user.phone,
+          email: user.email,
+          role: user.role,
         };
-      }
-
-      // 🔒 Flow ปกติ: ต้องตรวจสอบ OTP
-      if (!otp) throw new Error("OTP required");
-      if (user.otp !== otp) throw new Error("Invalid OTP");
-
-      const now = new Date();
-      if (!user.otpExpiry || user.otpExpiry < now)
-        throw new Error("OTP expired");
-
-      await prisma.user.update({
-        where: { phone },
-        data: { otp: null, otpExpiry: null, lastLogin: new Date() },
-      });
-
-      return {
-        id: user.id,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-        name: user.name,
-      };
-    }
-  }),
+      },
+    }),
 
     // ✅ LINE OAUTH LOGIN
     LineProvider({

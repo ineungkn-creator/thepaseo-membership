@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import {
+  getUploadFolder,
+  getLocalPath,
+  ensureDir,
+  makePublicUrl,
+} from "@/lib/storage";
 import fs from "fs";
 import path from "path";
 
@@ -73,18 +79,19 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const campaignId = formData.get("campaignId")?.toString() || null;
     const autoAssign = formData.get("autoAssign") === "true";
 
-    // ✅ handle image
     const file = formData.get("file") as File | null;
     let imageUrl: string | undefined;
-    if (file && file.size > 0) {
-      const uploadsDir = path.join(process.cwd(), "public/uploads/admin/coupon");
-      if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
-      const filename = `${Date.now()}_${file.name}`;
-      const filePath = path.join(uploadsDir, filename);
+    if (file && file.size > 0) {
+      const folder = getUploadFolder("coupon");
+      const fileName = `${Date.now()}-${file.name}`;
+      const localPath = getLocalPath(folder, fileName);
+
+      ensureDir(localPath); 
       const buffer = Buffer.from(await file.arrayBuffer());
-      fs.writeFileSync(filePath, buffer);
-      imageUrl = `/uploads/admin/coupon/${filename}`;
+      fs.writeFileSync(localPath, buffer);
+
+      imageUrl = makePublicUrl(folder, fileName);
     }
 
     const tagsRaw = formData.get("tags")?.toString() || "[]";

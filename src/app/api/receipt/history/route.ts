@@ -5,13 +5,24 @@ import { authConfig } from "@/lib/auth.config";
 
 const prisma = new PrismaClient();
 
-export async function GET() {
+export async function GET(req: Request) {
   const session = await getServerSession(authConfig);
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const { searchParams } = new URL(req.url);
+  const page = Number(searchParams.get("page") || 1);
+  const limit = Number(searchParams.get("limit") || 20);
+  const skip = (page - 1) * limit;
+
   const userId = session.user.id;
+
+  const totalCount = await prisma.receipt.count({
+    where: { userId },
+  });
+
+  const totalPages = Math.ceil(totalCount / limit);
 
   // ✅ ตรวจสอบว่ามี pointBalance หรือยัง
   let balanceRecord = await prisma.pointBalance.findUnique({ where: { userId } });
@@ -25,19 +36,20 @@ export async function GET() {
   const receipts = await prisma.receipt.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" },
+    skip,
+    take: limit,
     select: {
       id: true,
       amount: true,
-      status: true,           // pending / approved / rejected
+      status: true,
       rejectReason: true,
       createdAt: true,
       fileUrl: true,
-      shop: { select: { id: true, name: true } },
-      branch: { select: { id: true, name: true } },
-      // ✅ ดึงข้อมูลพอยท์ที่ได้จากใบเสร็จนั้นด้วย
+      shop: { select: { name: true } },
+      branch: { select: { name: true } },
       pointTransactions: {
         where: { referenceType: "RECEIPT" },
-        select: { id: true, amount: true, createdAt: true },
+        select: { amount: true },
       },
     },
   });
@@ -97,6 +109,6 @@ export async function GET() {
   return NextResponse.json({
     balance: balanceRecord.balance,
     receipts: formattedReceipts,
-    points: formattedPoints,
+    totalPages,
   });
 }

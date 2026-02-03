@@ -1,9 +1,6 @@
 "use client";
 
-import HeaderMobile from '@/components/HeaderMobile/page';
-import UserProfile from "@/components/UserProfile/page";
 import ProfileSetting from "@/components/ProfileSetting/page";
-import MenuProfile from "@/components/MenuProfile/page";
 import ConnectLineButton from "@/components/ConnectLineButton/page";
 import LogoutButton from "@/components/logoutbutton/page";
 import Link from "next/link";
@@ -13,48 +10,35 @@ import { SiPlatformdotsh } from "react-icons/si";
 
 export default function ProfileClient({ user }: { user: any }) {
   return (
-    <div className="max-w-2xl mx-auto p-0 px-4 mb-20 md:mt-20 md:mb-20 mb-4 rounded-2xl">
+    <>
+      <ProfileSetting />
 
-      <HeaderMobile />
-
-      <div className="max-w-2xl mx-auto p-0 -mb-14 md:mt-20 md:-mb-16 rounded-xl">
-        <div className="w-full pt-4 px-4 md:pt-0 md:px-20 md:pb-0">
-          <UserProfile />
-        </div>
-      </div>
-
-      <div className="w-full bg-white p-4 pt-16 md:p-10 md:pt-20 rounded-t-3xl rounded-xl">
-        <MenuProfile />
-        <ProfileSetting />
-      </div>
-
-      <div className="w-full flex flex-col gap-4 bg-white mt-4 p-4 md:p-10 rounded-xl">
-        <div className="profile-setting-header-1 flex flex-row items-center gap-2">
+      <div className="w-full flex flex-col gap-4 bg-gray-50 mt-4 p-4 mb:p-2 rounded-xl shadow border border-gray-100">
+        <div className="flex items-center gap-2">
           <SiPlatformdotsh className="text-paseo" size={24}/>
           <span className="text-base font-bold">ผูกบัญชีกับแพลตฟอร์ม</span>
         </div>
 
-        <div className="w-full flex flex-row gap-4">
-          <span className="text-sm whitespace-nowrap">ผูกมัดกับแพลตฟอร์ม</span>
+        <div className="flex gap-4">
+          <span className="text-xs whitespace-nowrap">ผูกมัดกับแพลตฟอร์ม</span>
           <ConnectLineButton />
         </div>
       </div>
 
-      <div className="w-full flex flex-col gap-4 bg-white mt-4 p-4 md:p-10 rounded-xl">
-        <Link className="flex flex-row jutify-start items-center gap-2" href="#">
+      <div className="w-full flex flex-col gap-4 bg-gray-50 mt-4 p-4 mb:p-2 rounded-xl shadow border border-gray-100">
+        <Link className="flex items-center gap-2" href="#">
           <IoIosSettings className="text-paseo" size={24} />
-          <span className="text-sm whitespace-nowrap">ตั้งค่า</span>
+          <span className="text-xs">ตั้งค่า</span>
         </Link>
-        <Link className="flex flex-row jutify-start items-center gap-2" href="/help">
+        <Link className="flex items-center gap-2" href="/help">
           <MdHelpCenter className="text-paseo" size={24} />
-          <span className="text-sm whitespace-nowrap">Help Center</span>
+          <span className="text-xs">Help Center</span>
         </Link>
       </div>
 
-      <div className="w-full bg-white mt-4 p-4 md:p-10 rounded-xl">
+      <div className="w-full bg-white my-4 mb-8 p-4 md:p-10 rounded-xl">
         <LogoutButton />
       </div>
-
-    </div>
+    </>
   );
 }

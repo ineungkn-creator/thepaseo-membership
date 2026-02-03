@@ -64,8 +64,8 @@ export default function ShareButton({ title, linkShare }: ShareButtonProps) {
   return (
     <Drawer>
       <DrawerTrigger asChild>
-        <Button variant="outline">
-          <LuShare2 className="text-2xl" />
+        <Button variant="outline" className="p-0">
+          <LuShare2 size={24} />
         </Button>
       </DrawerTrigger>
       <DrawerContent className="blur overflow-hidden fixed bottom-1 left-1 right-1 text-black rounded-xl shadow-sm border border-gray-200">

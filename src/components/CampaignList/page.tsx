@@ -59,9 +59,11 @@ export default function CampaignList() {
 
   return (
     <div className="p-0 max-w-5xl mx-auto mb-6">
-      <div className="flex flex-row justify-between mb-4">
-        <h1 className="text-xl font-bold">Campaign</h1>
-        <Link href="/campaign" className="text-base">ดูทั้งหมด</Link>
+      <div className="flex flex-row items-center justify-between mb-4">
+        <h1 className="text-xl font-bold">แคมเปญ</h1>
+        <Link href="/campaign" className="bg-gray-100 px-2 py-1 rounded-full border border-gray-20 text-xs">
+          ดูทั้งหมด
+        </Link>
       </div>
 
       <section className="embla_post">

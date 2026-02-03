@@ -61,10 +61,10 @@ export default function RewardList({ shopId }: { shopId?: string }) {
 
   return (
     <div className="p-0 max-w-5xl mx-auto mb-6">
-      <div className="flex flex-row justify-between mb-4">
+      <div className="flex flex-row items-center justify-between mb-4">
         <h1 className="text-xl font-bold">รางวัลสะสมแต้ม</h1>
         {!shopId && ( // ✅ ซ่อนปุ่ม “ดูทั้งหมด” ถ้าอยู่ในร้าน
-          <Link href="/reward" className="text-base">
+          <Link href="/reward" className="bg-gray-100 px-2 py-1 rounded-full border border-gray-20 text-xs">
             ดูทั้งหมด
           </Link>
         )}
@@ -105,25 +105,17 @@ export default function RewardList({ shopId }: { shopId?: string }) {
                   >
                     <div className="relative w-full h-full flex flex-col shadow-lg">
                       <div className="relative w-full h-full flex flex-col gap-2 p-4 pb-2 bg-gray-100 rounded-2xl ticket-notch">
-                        {r.imageUrl ? (
+                        <div className="relative w-full rounded-xl overflow-hidden bg-white pt-125%">
                           <Image
-                            width={600}
-                            height={600}
-                            src={r.imageUrl}
+                            src={r.imageUrl || "/main/no-image.png"}
                             alt={r.name}
-                            className="h-40 object-cover rounded-xl"
+                            fill
+                            className="object-cover"
+                            sizes="160px"
                           />
-                          ) : (
-                          <Image
-                            width={600}
-                            height={600}
-                            src='/main/no-image.png'
-                            alt={r.name}
-                            className="h-40 object-cover rounded-xl border bg-white p-6"
-                          />
-                        )}
+                        </div>
 
-                        <div className="w-full" style={{ minHeight: "1.5rem" }}>
+                          <div className="w-full" style={{ minHeight: "1.5rem" }}>
                             <h3 className="text-xs md:text-sm font-bold leading-5 tracking-wide">
                               {r.name}
                             </h3>
@@ -156,7 +148,7 @@ export default function RewardList({ shopId }: { shopId?: string }) {
                             </span>
                           </button>
                         </div>
-                      </div>
+                    </div>
                   </Link>
                 </div>
               );

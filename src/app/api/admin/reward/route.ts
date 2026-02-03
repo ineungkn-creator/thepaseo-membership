@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import {
+  getUploadFolder,
+  getLocalPath,
+  ensureDir,
+  makePublicUrl,
+} from "@/lib/storage";
 import fs from "fs";
-import path from "path";
 
 const prisma = new PrismaClient();
 
@@ -93,16 +98,16 @@ export async function POST(req: Request) {
     let imageUrl: string | null = null;
 
     if (file && file.size > 0) {
-      const uploadsDir = path.join(process.cwd(), "public/uploads/admin/reward");
-      if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+      const folder = getUploadFolder("reward"); // อ่านจาก ENV
+      const filename = `${Date.now()}-${file.name}`;
 
-      const filename = `${Date.now()}_${file.name}`;
-      const filePath = path.join(uploadsDir, filename);
+      const localPath = getLocalPath(folder, filename);
+      ensureDir(localPath);
 
       const buffer = Buffer.from(await file.arrayBuffer());
-      fs.writeFileSync(filePath, buffer);
+      fs.writeFileSync(localPath, buffer);
 
-      imageUrl = `/uploads/admin/reward/${filename}`;
+      imageUrl = makePublicUrl(folder, filename);
     }
 
     const tagsRaw = formData.get("tags")?.toString() || "[]";

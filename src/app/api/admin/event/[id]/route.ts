@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import fs from "fs/promises";
+import {
+  getUploadFolder,
+  getLocalPath,
+  ensureDir,
+  makePublicUrl,
+} from "@/lib/storage";
+import fs from "fs";
 import path from "path";
 
 const prisma = new PrismaClient();
@@ -29,21 +35,20 @@ export async function PATCH(
     const branchIds = formData.getAll("branchIds[]") as string[];
 
     // file handling
-    const file = formData.get("file") as File | null;
-    let imageUrl: string | undefined = undefined;
+    const file = formData.get("file") as File;
+    let imageUrl: string | null = null;
+    
+    if (file && file.size > 0) {
+      const folder = getUploadFolder("event"); // อ่านจาก ENV
+      const filename = `${Date.now()}-${file.name}`;
 
-    if (file && file.size > 0 && file.name) {
-      const uploadsDir = path.join(process.cwd(), "public/uploads/admin/event");
-      await fs.mkdir(uploadsDir, { recursive: true });
-
-      const safeName = file.name.replace(/[^\w.\-_]/g, "_");
-      const filename = `${Date.now()}_${safeName}`;
-      const filePath = path.join(uploadsDir, filename);
+      const localPath = getLocalPath(folder, filename);
+      ensureDir(localPath);
 
       const buffer = Buffer.from(await file.arrayBuffer());
-      await fs.writeFile(filePath, buffer);
+      fs.writeFileSync(localPath, buffer);
 
-      imageUrl = `/uploads/admin/event/${filename}`;
+      imageUrl = makePublicUrl(folder, filename);
     }
 
     const tagsRaw = formData.get("tags")?.toString() || "[]";
@@ -183,12 +188,21 @@ export async function DELETE(
 
     // 4) ลบไฟล์รูปภาพ (ถ้ามี) โดยใช้ fs/promises
     if (event.imageUrl) {
-      const filePath = path.join(process.cwd(), "public", event.imageUrl);
       try {
-        await fs.unlink(filePath);
+        const folder = getUploadFolder("event");
+
+        // extract file name จาก URL
+        const fileName = event.imageUrl.split("/").pop();
+
+        if (fileName) {
+          const localPath = getLocalPath(folder, fileName);
+
+          if (fs.existsSync(localPath)) {
+            fs.unlinkSync(localPath);
+          }
+        }
       } catch (err) {
-        // ถ้าไฟล์ไม่มีหรือเกิด error ในการลบ ให้ log แล้วไปต่อได้
-        console.warn("Warning: failed to unlink event image", filePath, err);
+        console.warn("⚠️ Failed to delete reward image:", err);
       }
     }
 

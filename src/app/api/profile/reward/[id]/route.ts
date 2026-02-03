@@ -1,3 +1,4 @@
+//api/profile/reward/[id]
 import { getServerSession } from "next-auth";
 import { authConfig } from "@/lib/auth.config";
 import { PrismaClient } from "@prisma/client";
@@ -32,8 +33,18 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
       );
     }
 
+    const now = new Date();
+
+    const status = participation.redeemed
+      ? "REDEEMED"
+      : participation.reward.endDate &&
+        participation.reward.endDate < now
+      ? "EXPIRED"
+      : "ACTIVE";
+
     return NextResponse.json({
       id: participation.id,
+      status,
       redeemed: participation.redeemed,
       redeemedAt: participation.redeemedAt,
       redeemCode: participation.redeemCode,

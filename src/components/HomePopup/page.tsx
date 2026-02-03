@@ -82,7 +82,7 @@ export default function HomePopup() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 overlay p-4">
-      <div className="bg-transparent max-w-md w-[90%] relative">
+      <div className="bg-transparent max-w-md w-full relative">
         <button
           className="absolute z-50 top-2 right-2 text-white p-2 rounded-full flex justify-center items-center bg-white shadow"
           onClick={() => setIsOpen(false)}

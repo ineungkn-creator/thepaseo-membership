@@ -3,7 +3,6 @@
 import { useEffect, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
 import RichTextEditor from "@/components/RichTextEditor/page";
 import TagSelector from "@/components/TagSelector";
 
@@ -239,21 +238,23 @@ export default function AddRewardPage() {
             {branches.map((b) => {
               const isSelected = selectedBranches.includes(b.id);
               return (
-                <Badge
+                <span
                   key={b.id}
-                  className={`cursor-pointer ${
-                    isSelected ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800"
+                  className={`px-3 py-1 rounded-lg cursor-pointer ${
+                    isSelected
+                      ? "bg-paseo text-white"
+                      : "bg-gray-200 text-gray-800"
                   }`}
-                  onClick={() => {
-                    if (isSelected) {
-                      setSelectedBranches(selectedBranches.filter((id) => id !== b.id));
-                    } else {
-                      setSelectedBranches([...selectedBranches, b.id]);
-                    }
-                  }}
+                  onClick={() =>
+                    setSelectedBranches((prev) =>
+                      isSelected
+                        ? prev.filter((id) => id !== b.id)
+                        : [...prev, b.id]
+                    )
+                  }
                 >
                   {b.name}
-                </Badge>
+                </span>
               );
             })}
           </div>
@@ -298,9 +299,6 @@ export default function AddRewardPage() {
               ))}
           </select>
 
-          <p className="text-sm text-gray-500 mt-1">
-            เลือกได้หลายร้าน หรือเลือก “จุดบริการ” หากของรางวัลนี้ไม่ได้อยู่ในร้านใด
-          </p>
         </div>
 
         <TagSelector value={tags} onChange={setTags} />
@@ -390,10 +388,6 @@ export default function AddRewardPage() {
                 dangerouslySetInnerHTML={{ __html: terms || "<p>ยังไม่มีเงื่อนไข...</p>" }}
               />
             </div>
-
-          
-
-          
 
             <div className="text-sm text-gray-700 space-y-1">
             <p>

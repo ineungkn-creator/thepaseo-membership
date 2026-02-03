@@ -13,7 +13,7 @@ import UserProfile from "@/components/UserProfile/page";
 import ShareButton from "@/components/ShareButton/page";
 import FavoriteButton from "@/components/FavoriteButton/page";
 import html2canvas from "html2canvas";
-
+import HeaderMobile from '@/components/HeaderMobile/page';
 import UseCouponModal from "@/components/coupon/UseCouponModal";
 
 
@@ -100,7 +100,9 @@ const handleClaim = async () => {
   setError(null);
 
   try {
-    const res = await fetch(`/api/coupon/${coupon.id}`, { method: "POST" });
+    const res = await fetch(`/api/coupon/${coupon.id}/join`, {
+      method: "POST",
+    });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "ไม่สามารถรับคูปองได้");
 
@@ -229,7 +231,7 @@ const handleClaim = async () => {
       >
         {joining ? "กำลังรับคูปอง..." : "รับคูปองนี้"}
         {coupon.maxPerUser && (
-          <span className="text-xs block mt-1 text-gray-600">
+          <span className="text-xs block mt-1 text-gray-600 leading-none">
             รับได้ {coupon.maxPerUser} ครั้ง / รับไปแล้ว {coupon.receivedCount} ครั้ง
           </span>
         )}
@@ -238,128 +240,121 @@ const handleClaim = async () => {
   };
 
   return (
-    <div>
-      {/* ✅ ส่วนหัว */}
-      <div className="relative overflow-hidden py-2 md:hidden">
-        <div className="absolute top-4 left-4">
-          <BackButton className="mb-4" />
+      <div>
+        <HeaderMobile />
+      
+        <div className="max-w-2xl mx-auto -mb-14 md:mt-20 md:-mb-16 pt-16  rounded-xl">
+          <div className="w-full px-10 md:pt-0 md:px-20 md:pb-0">
+            <UserProfile  />
+          </div>
         </div>
-        <div className="flex flex-row justify-center gap-2">
-          <Image src="/logo.png" alt="Thepaseo" width={50} height={50} />
-        </div>
-      </div>
+        <div
+          ref={captureRef}
+          className="capture relative max-w-2xl mx-auto md:pt-10 md:pb-0 pb-14 md:mb-10 pt-20 bg-gray-100 rounded-t-5xl rounded-b-xl flex flex-col  md:gap-6 gap-4"
+        >
+  
+          <div className="px-4 md:px-10">
+            {coupon.imageUrl && (
+              <Image
+                width={600}
+                height={600}
+                src={coupon.imageUrl}
+                alt={coupon.name}
+                className="w-full h-full object-cover rounded-2xl shadow border border-gray-100"
+              />
+            )}
+          </div>
 
-      {/* ✅ User Profile */}
-      <div className="max-w-2xl mx-auto p-0 -mb-14 md:mt-20 md:-mb-16 rounded-xl">
-        <div className="w-full pt-4 px-10 md:pt-0 md:px-20 md:pb-0">
-          <UserProfile />
-        </div>
-      </div>
-
-      {/* ✅ เนื้อหาคูปอง */}
-      <div ref={captureRef} className="relative max-w-2xl mx-auto p-0 pt-20 bg-gray-100 rounded-5xl shadow-md">
-        <div className="p-4 md:p-10">
-          {coupon.imageUrl && (
-            <Image
-              width={600}
-              height={600}
-              src={coupon.imageUrl}
-              alt={coupon.name}
-              className="w-full object-cover rounded-xl shadow-md"
-            />
-          )}
-        </div>
-
-                <div className="p-4 px-4 pt-0 md:p-10 md:pt-0">
-                  <div className="flex flex-row justify-between align-start gap-4 bg-white p-6 rounded-lg">
-                    <div className="flex flex-col gap-3">
-                      <h1 className="text-2xl font-bold mb-2">{coupon.name}</h1>
-                      <div className="flex flex-row item-center align-center gap-4">
-                        <FaRegCalendarCheck className="text-2xl" />
-                        <p className="text-base text-gray-500">
-                          ตั้งแต่ {start_day} - {end_day} {end_month_long} {end_year} นี้
-                        </p>
-                      </div>
-        
-                      {coupon.pointCost > 0 && 
-                      <div className="flex flex-row item-center align-center gap-4">
-                        <CiBitcoin className="text-2xl" />
-                        <p className="text-base text-gray-600">ค่าใช้จ่าย: {coupon.pointCost} พอยต์</p>
-                      </div>
-                      }
-        
-                      {coupon.pointEarn > 0 && 
-                      <div className="flex flex-row item-center align-center gap-4">
-                        <CiBitcoin className="text-2xl" />
-                        <p className="text-base text-gray-600">ผู้เข้าร่วมจะได้รับ: {coupon.pointEarn} พอยต์</p>
-                      </div>
-                      }
-        
-                      <div className="flex flex-row item-center align-center gap-4">
-                        <CiBitcoin className="text-2xl" />
-                        <p className="text-base text-gray-600">
-                          แต้มของคุณ: <span className="font-semibold text-green-600">{pointBalance}</span> พอยต์
-                        </p>
-                      </div>
-                    </div>
-        
-                    <div className="flex flex-col items-center gap-4">
-                      {session?.user?.id && (
-                        <FavoriteButton
-                          targetId={coupon.id}
-                          targetType="COUPON"
-                          userId={session.user.id}
-                        />
-                      )}
-                      <button
-                        onClick={handleCapture}
-                      >
-                        <PiDotsThreeOutlineLight className="text-2xl" />
-                      </button>
-                      <ShareButton
-                        title={coupon?.name || "Event"}
-                        linkShare={coupon?.linkShare}
-                      />
-                    </div>
-        
-                  </div>
-                  
+          <div className="px-4 md:px-10">
+            <div className="flex flex-row justify-between align-start gap-4 bg-white md:p-6 p-4 rounded-2xl shadow border border-gray-100">
+              <div className="flex flex-col gap-3">
+                <h1 className="text-sm font-bold mb-2">{coupon.name}</h1>
+                <div className="flex flex-row item-center align-center gap-4">
+                  <FaRegCalendarCheck size={24} />
+                  <p className="text-sm text-gray-500">
+                    ตั้งแต่ {start_day} - {end_day} {end_month_long} {end_year} นี้
+                  </p>
                 </div>
-
-                <div className="p-4 px-4 pt-0 md:p-10 md:pt-0">
-                  <div className="flex flex-col justify-between align-start gap-4 bg-white p-6 rounded-lg">
-                  {coupon.description && (
-                    <div className="mb-4">
-                      <h3 className="text-lg font-semibold mb-2">รายละเอียด</h3>
-                      <div
-                        className="prose text-gray-700"
-                        dangerouslySetInnerHTML={{ __html: coupon.description }}
-                      />
-                    </div>
-                  )}
-
-                  {coupon.terms && (
-                    <div className="mb-4">
-                      <h3 className="text-lg font-semibold mb-2">เงื่อนไข</h3>
-                      <div
-                        className="prose text-gray-700"
-                        dangerouslySetInnerHTML={{ __html: coupon.terms }}
-                      />
-                    </div>
-                  )}
-
-                  {coupon.locationLabel && 
-                    <div className="mb-4">
-                      <h3 className="text-lg font-bold mb-4">จุดแลกรับของราลวัล</h3>
-                    <p className="text-gray-700">{coupon.locationLabel}</p>
-                    </div>
-                  }
-                  </div>
-
+  
+                {coupon.pointCost > 0 && 
+                <div className="flex flex-row item-center align-center gap-4">
+                  <CiBitcoin size={24} />
+                  <p className="text-sm text-gray-600">ค่าใช้จ่าย: {coupon.pointCost} พอยต์</p>
                 </div>
+                }
+  
+                {coupon.pointEarn > 0 && 
+                <div className="flex flex-row item-center align-center gap-4">
+                  <CiBitcoin size={24} />
+                  <p className="text-sm text-gray-600">ผู้เข้าร่วมจะได้รับ: {coupon.pointEarn} พอยต์</p>
+                </div>
+                }
+  
+                <div className="flex flex-row item-center align-center gap-4">
+                  <CiBitcoin size={24} />
+                  <p className="text-sm text-gray-600">
+                    แต้มของคุณ: <span className="font-semibold text-green-600">{pointBalance}</span> พอยต์
+                  </p>
+                </div>
+              </div>
+  
+              <div className="flex flex-col items-center gap-2">
+                {session?.user?.id && (
+                  <FavoriteButton
+                    targetId={coupon.id}
+                    targetType="COUPON"
+                    userId={session.user.id}
+                  />
+                )}
+                <button
+                  onClick={handleCapture}
+                >
+                  <PiDotsThreeOutlineLight size={24} />
+                </button>
+                <ShareButton
+                  title={coupon?.name || "Event"}
+                  linkShare={coupon?.linkShare}
+                />
+              </div>
+  
+            </div>
+            
+          </div>
+
+        <div className="px-4 md:px-10">
+          <div className="flex flex-col justify-between align-start gap-4 bg-white md:p-6 p-4 rounded-2xl shadow border border-gray-100">
+            {coupon.description && (
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold mb-2">รายละเอียด</h3>
+                <div
+                  className="prose text-gray-700"
+                  dangerouslySetInnerHTML={{ __html: coupon.description }}
+                />
+              </div>
+            )}
+
+            {coupon.terms && (
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold mb-2">เงื่อนไข</h3>
+                <div
+                  className="prose text-gray-700"
+                  dangerouslySetInnerHTML={{ __html: coupon.terms }}
+                />
+              </div>
+            )}
+
+            {coupon.locationLabel && 
+              <div className="mb-4">
+                <h3 className="text-lg font-bold mb-4">จุดแลกรับของราลวัล</h3>
+              <p className="text-gray-700">{coupon.locationLabel}</p>
+              </div>
+            }
+            </div>
+
+          </div>
 
         {/* ✅ ปุ่มรับคูปอง */}
-        <div className="max-w-2xl mx-auto bg-white w-full p-4 pb-20 md:p-4 rounded-t-2xl shadow-sm border border-gray-200">
+        <div className="max-w-2xl mx-auto bg-white w-full p-4 pb-4 md:p-4 md:rounded-2xl rounded-t-2xl shadow-sm border border-gray-200">
           {renderButton()}
         </div>
 

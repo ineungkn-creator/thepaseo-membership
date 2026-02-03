@@ -19,12 +19,34 @@ export default function UploadPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+  const optionsRef = useRef<HTMLDivElement>(null);
+
+  const [terms, setTerms] = useState<{
+    description: string;
+    images: string[];
+  } | null>(null);
 
   // file input แยก 3 แบบ
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (optionsRef.current && !optionsRef.current.contains(e.target as Node)) {
+        setShowOptions(false);
+      }
+    };
+
+    if (showOptions) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showOptions]);
 
   const removeFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
@@ -64,13 +86,31 @@ export default function UploadPage() {
   };
 
   useEffect(() => {
+    const fetchTerms = async () => {
+      try {
+        const res = await fetch("/api/admin/receipts/terms");
+        const data = await res.json();
+
+        setTerms({
+          description: data.description || "",
+          images: data.images || [],
+        });
+      } catch (err) {
+        console.error("Failed to load upload terms", err);
+      }
+    };
+
+    fetchTerms();
+  }, []);
+
+  useEffect(() => {
     }, [emblaApi])
 
   return (
-    <div className="max-w-2xl mx-auto p-0 mb-20 md:mt-10 md:mb-20 mb-4 rounded-xl">
+    <div className="max-w-2xl mx-auto p-0 px-0 mb-20 md:mt-20 md:mb-0 mb-4 rounded-xl">
       <HeaderMobile showBack={true} />
       
-      <div className="mb-0 py-4 px-4 md:px-4">
+      <div className="md:pt-4 pt-16 mb-0 py-4 px-4 md:px-4">
         <BannerUpload />
       </div>
 
@@ -93,9 +133,16 @@ export default function UploadPage() {
             </Link>
 
           {showOptions && (
-            <div className="flex flex-col justify-start items-start mt-2 py-1 px-2 bg-white rounded-xl shadow-2xl z-50 relative border-2 border-paseo">
+            <div ref={optionsRef} className="flex flex-col justify-start items-start -mt-8 py-0 px-0 blur2 rounded-xl shadow-2xl z-50 relative border">
+              <button
+                className="absolute top-1 right-1 w-6 h-6 flex items-center justify-center border rounded-full text-xs"
+                onClick={() => setShowOptions(false)}
+              >
+                ✕
+              </button>
+
               <Button
-                className="w-full py-0 flex justify-start gap-2 hover:bg-paseo-hover"
+                className="bg-transparent w-full py-0 flex justify-start gap-2 hover:bg-paseo-hover "
                 variant="outline"
                 onClick={() => {
                   setShowOptions(false);
@@ -107,10 +154,10 @@ export default function UploadPage() {
                 
               </Button>
 
-              <hr className="w-90% self-center my-1 border border-t-0 border-paseo"></hr>
+              <hr className="w-full self-center my-0 border border-t-0"></hr>
 
               <Button
-                className="w-full py-0 flex justify-start gap-2 hover:bg-paseo-hover text-xs"
+                className="bg-transparent w-full py-0 flex justify-start gap-2 hover:bg-paseo-hover text-xs"
                 variant="outline"
                 onClick={() => {
                   setShowOptions(false);
@@ -121,10 +168,10 @@ export default function UploadPage() {
                 <span className="text-xs">คลังภาพ (เลือกหลายไฟล์)</span>
               </Button>
 
-              <hr className="w-90% self-center my-1 border border-t-0 border-paseo"></hr>
+              <hr className="w-full self-center my-0 border border-t-0"></hr>
 
               <Button
-                className="w-full py-0 flex justify-start gap-2 hover:bg-paseo-hover text-xs"
+                className="bg-transparent w-full py-0 flex justify-start gap-2 hover:bg-paseo-hover text-xs"
                 variant="outline"
                 onClick={() => {
                   setShowOptions(false);
@@ -241,15 +288,26 @@ export default function UploadPage() {
         </div>
 
         <div className="flex flex-col items-center relative">
-            <div className="pl-10 pr-10">
-              <Image
-                src="/upload-terms.png"
-                width={500}
-                height={500}
-                alt="ThePaseo"
-                className="cover"
-              />
+          {terms && (
+            <div className="flex flex-col items-center relative mt-6">
+
+              {/* Images */}
+              {terms.images.length > 0 && (
+                <div className="w-full px-10 flex flex-col gap-4">
+                  {terms.images.map((img) => (
+                    <Image
+                      key={img}
+                      src={img}
+                      width={800}
+                      height={800}
+                      alt="Upload terms"
+                      className="rounded-xl w-full object-contain"
+                    />
+                  ))}
+                </div>
+              )}
             </div>
+          )}
 
             <div className="flex flex-row relative">
               <Image

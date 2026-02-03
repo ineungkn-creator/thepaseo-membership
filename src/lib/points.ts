@@ -67,8 +67,6 @@ export async function deductPoints(userId: string, amount: number, referenceId?:
   return newBalance;
 }
 
-
-
 /**
  * ดึง point balance ของ user
  */

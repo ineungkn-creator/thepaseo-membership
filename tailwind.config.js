@@ -21,6 +21,7 @@ module.exports = {
       spacing: {
         '5rem': '5rem',
         'my-custom-spacing': '5rem',
+        '30': '8rem',
         '10%': '10%',
         '15%': '15%',
         '20%': '20%',
@@ -35,6 +36,8 @@ module.exports = {
         '80%': '80%',
         '85%': '85%',
         '90%': '90%',
+        '100%': '100%',
+        '125%': '125%',
         'homebanner': '27.5rem',
         'homebanner-mb': '12.5rem',
       },
@@ -42,6 +45,7 @@ module.exports = {
         prompt: ['Prompt', 'sans-serif'],
       },
       colors: {
+        'newgray': '#e5e7eb',
         'line': '#06C755',
         'paseo': '#9DC93C',
         'paseo-hover': '#ecf5d2',

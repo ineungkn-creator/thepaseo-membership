@@ -7,7 +7,8 @@ export default function GeneralPointSetting() {
     signupPoints: 0,
     referralPoints: 0,
     receiptRateAmount: 100,
-    receiptRatePoints: 1
+    receiptRatePoints: 1,
+    pointExpireYears: 1
   });
 
   useEffect(() => {
@@ -68,6 +69,16 @@ export default function GeneralPointSetting() {
             onChange={(e) => setForm({ ...form, receiptRatePoints: +e.target.value })}
             />
             พ้อย
+        </div>
+
+        <div className="w-full mb-4 flex flex-row gap-2">
+            <label className="w-2/6 md:w-1/6">วันหมดอายุ</label>
+            <input
+            className="w-4/6 md:w-5/6 pt-2 pb-2 pl-4 pr-4 border rounded-full"
+            type="number"
+            value={form.pointExpireYears}
+            onChange={(e) => setForm({ ...form, pointExpireYears: +e.target.value })}
+            />
         </div>
 
         <div className="w-full flex flex-row justify-end">

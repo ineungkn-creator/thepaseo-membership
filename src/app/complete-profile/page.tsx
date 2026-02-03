@@ -5,7 +5,6 @@ import { useSession } from "next-auth/react"
 import { useRouter } from 'next/navigation'
 import Image from 'next/image';
 import React from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
@@ -17,6 +16,10 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import BannerRegister from "@/components/BannerRegister/page"
 import HeaderMobile from '@/components/HeaderMobile/page';
+
+import SimpleSelect from '@/components/form/SimpleSelect'
+import FormField from '@/components/form/FormField'
+import ThaiAddressSelect from '@/components/address/ThaiAddressSelect'
 
 import { FaSave } from "react-icons/fa";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
@@ -33,8 +36,7 @@ type FormState = {
   email: string;
   occupation: string;
   residenceType: string;
-  houseNumber: string;
-  alley: string;
+  address: string;
   subDistrict: string;
   district: string;
   province: string;
@@ -48,6 +50,11 @@ export default function CompleteProfilePage() {
   const router = useRouter()
   const { data: session } = useSession()
   const [branches, setBranches] = useState<{ id: string; name: string; type: string }[]>([]);
+  const [originalPhone, setOriginalPhone] = useState<string>("")
+  const [showOtpModal, setShowOtpModal] = useState(false)
+  const [otp, setOtp] = useState("")
+  const [otpError, setOtpError] = useState("")
+  const [isPhoneVerified, setIsPhoneVerified] = useState(true)
   const [interests, setInterests] = useState<Interest[]>([]);
   const [step, setStep] = useState(1)
   const [form, setForm] = useState<FormState>({
@@ -55,8 +62,7 @@ export default function CompleteProfilePage() {
     gender: "",
     phone: "",
     email: "",
-    houseNumber: "",
-    alley: "",
+    address: "",
     subDistrict: "",
     district: "",
     province: "",
@@ -102,8 +108,7 @@ export default function CompleteProfilePage() {
             gender: data.user.gender || prev.gender,
             phone: data.user.phone || prev.phone,
             email: data.user.email || prev.email,
-            houseNumber: data.user.houseNumber || prev.houseNumber,
-            alley: data.user.alley || prev.alley,
+            address: data.user.address || prev.address,
             subDistrict: data.user.subDistrict || prev.subDistrict,
             district: data.user.district || prev.district,
             province: data.user.province || prev.province,
@@ -111,9 +116,15 @@ export default function CompleteProfilePage() {
             branchId: data.user.branchId || prev.branchId,
             occupation: data.user.occupation || prev.occupation,
             residenceType: data.user.residenceType || prev.residenceType,
-            interests: data.user.interests || [],
+            interests: data.user.interests
+            ? data.user.interests.map((i: any) => i.id)
+            : [],
           }));
           if (data.user.dateOfBirth) setDate(new Date(data.user.dateOfBirth));
+          if (data.user.phone) {
+            setOriginalPhone(data.user.phone)
+            setIsPhoneVerified(true)
+          }
         }
       } catch (err) {
         console.error("โหลดข้อมูล profile ล้มเหลว", err);
@@ -163,13 +174,40 @@ export default function CompleteProfilePage() {
     }
   };
 
-  const handleNextStep = () => {
-    if (step === 1 && !thaiPhoneRegex.test(form.phone)) {
-      setError("กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง");
-      return;
+  const handleNextStep = async () => {
+    setError("")
+
+    // step 1 → ตรวจ phone
+    if (step === 1) {
+      if (!thaiPhoneRegex.test(form.phone)) {
+        setError("กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง")
+        return
+      }
+
+      // ถ้าเบอร์เปลี่ยน → ต้อง OTP
+      if (form.phone !== originalPhone && !isPhoneVerified) {
+        const res = await fetch("/api/auth/send-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            phone: form.phone,
+            purpose: "VERIFY_PHONE",
+          }),
+        })
+
+        if (!res.ok) {
+          const data = await res.json()
+          setError(data.error || "ไม่สามารถส่ง OTP ได้")
+          return
+        }
+
+        setShowOtpModal(true)
+        return
+      }
     }
-    setStep(step + 1);
-  };
+
+    setStep(step + 1)
+  }
 
   const handlePrevStep = () => setStep(step - 1);
 
@@ -179,6 +217,11 @@ export default function CompleteProfilePage() {
     if (!form.interests.length) {
       setError('กรุณาเลือกความสนใจอย่างน้อยหนึ่งอย่าง');
       return;
+    }
+
+    if (form.phone !== originalPhone && !isPhoneVerified) {
+      setError("กรุณายืนยันเบอร์โทรศัพท์ก่อนบันทึกข้อมูล")
+      return
     }
 
     try {
@@ -201,18 +244,18 @@ export default function CompleteProfilePage() {
   };
 
   return (
-    <div className="max-w-lg mx-auto p-0 mb-20 md:mb-0 mb-0 rounded-xl relative">
+    <div className="max-w-lg mx-auto md:py-6 py-4 pb-0 rounded-xl relative">
 
         <HeaderMobile showBack={false} />
 
-        <div className="mb-0 py-4 px-4 md:px-4">
+        <div className="md:pt-4 pt-14 mb-0 py-4 px-4 md:px-4">
           <BannerRegister />
         </div>
 
-        <div className="md:p-10 p-4 m-0 rounded-3xl bg-white shadow z-50 relative overflow-hidden">
+        <div className="md:p-10 p-4 m-0 md:mb-20 rounded-3xl bg-white shadow z-50 relative">
           <div className="flex justify-center items-center gap-4 mb-5">
-            <Image src="/logo-paseo-register.png" width={96} height={96} alt="ThePaseo" />
-            <h2 className="text-5xl font-semibold text-center">Welcome</h2>
+            <Image src="/logo-paseo-register.png" width={54} height={54} alt="ThePaseo" />
+            <h2 className="text-xl font-semibold text-center">ข้อมูลเพิ่มเติม</h2>
           </div>
 
           {/* Stepper */}
@@ -248,92 +291,178 @@ export default function CompleteProfilePage() {
             ))}
           </div>
 
-          <form onSubmit={handleSubmit} className="relative overflow-hidden">
+          <form onSubmit={handleSubmit}>
             {step === 1 && (
-              <div className="flex flex-col gap-4">
-                <div className='flex flex-row gap-4'>
-                  <Popover open={open} onOpenChange={setOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className={`w-full justify-between rounded-xl bg-gray-100 font-normal ${!date ? "text-gray-400" : ""}`}>
-                        {date ? format(date, "dd MMMM yyyy", { locale: th }) : "เลือกวันเกิด *"}
-                        <CalendarIcon className="ml-2 h-4 w-4 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0 bg-white" align="start">
-                      <Calendar
-                        className='w-80'
-                        mode="single"
-                        captionLayout="dropdown"
-                        selected={date}
-                        onSelect={handleDateChange}
-                        fromYear={1950}
-                        toYear={new Date().getFullYear()}
-                      />
-                    </PopoverContent>
-                  </Popover>
+              <div className="flex flex-col gap-0 pb-10">
+                <div className='flex flex-row gap-2'>
+                  <FormField label="วันเกิด" required>
+                    <Popover open={open} onOpenChange={setOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={`w-full justify-between rounded-xl bg-gray-100 font-normal pt-10 pb-4 ${
+                            !date ? 'text-gray-400' : ''
+                          }`}
+                        >
+                          {date
+                            ? format(date, 'dd MMMM yyyy', { locale: th })
+                            : 'เลือกวันเกิด'}
+                          <CalendarIcon className="ml-2 h-4 w-4 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0 bg-white" align="start">
+                        <Calendar
+                          className="w-80"
+                          mode="single"
+                          captionLayout="dropdown"
+                          selected={date}
+                          onSelect={handleDateChange}
+                          fromYear={1950}
+                          toYear={new Date().getFullYear()}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </FormField>
 
-                  <Select value={form.gender} onValueChange={(v) => setForm({ ...form, gender: v })}>
-                    <SelectTrigger className="w-full rounded-xl bg-gray-100">
-                      <SelectValue placeholder="เพศ *" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white w-full">
-                      <SelectItem value="MALE">ชาย</SelectItem>
-                      <SelectItem value="FEMALE">หญิง</SelectItem>
-                      <SelectItem value="OTHER">อื่นๆ</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <FormField label="เพศ" required>
+                    <SimpleSelect
+                      value={form.gender}
+                      placeholder="เลือกเพศ"
+                      onChange={(value) => setForm({ ...form, gender: value })}
+                      options={[
+                        { value: 'MALE', label: 'ชาย' },
+                        { value: 'FEMALE', label: 'หญิง' },
+                        { value: 'OTHER', label: 'อื่นๆ' },
+                      ]}
+                    />
+                  </FormField>
                 </div>
 
-                <Input type="tel" placeholder="เบอร์โทรศัพท์ (เช่น 0812345678)" name="phone" onChange={handleChange} value={form.phone} required />
-                {error.includes("เบอร์โทร") && <p className="text-red-500 text-sm">{error}</p>}
+                <FormField label="เบอร์โทรศัพท์" required>
+                  <Input
+                    type="text"
+                    placeholder="เบอร์โทรศัพท์ (เช่น 0812345678)"
+                    name="phone"
+                    onChange={handleChange}
+                    className="w-full pt-10 pb-4 pl-2 pr-4 border rounded-xl text-black bg-white-100 focus:outline-none focus:ring focus:ring-paseo"
+                    value={form.phone}
+                    required
+                  />
+                  {error.includes("เบอร์โทร") && <p className="text-red-500 text-sm">{error}</p>}
+                </FormField>
 
-                <Input type="email" placeholder="อีเมล *" name="email" disabled value={form.email} />
-                <Select value={form.occupation} onValueChange={(v) => setForm({ ...form, occupation: v })}>
-                  <SelectTrigger className="w-full rounded-xl bg-gray-100"><SelectValue placeholder="อาชีพ *" /></SelectTrigger>
-                  <SelectContent className="bg-white w-full">
-                    <SelectItem value="STUDENT">นักศึกษา</SelectItem>
-                    <SelectItem value="PRIVATE_EMPLOYEE">พนักงานเอกชน</SelectItem>
-                    <SelectItem value="STATE_ENTERPRISE">พนักงานรัฐวิสาหกิจ</SelectItem>
-                    <SelectItem value="FREELANCER">อาชีพอิสระ</SelectItem>
-                    <SelectItem value="BUSINESS_OWNER">เจ้าของกิจการ</SelectItem>
-                    <SelectItem value="HOMEMAKER">พ่อบ้าน - แม่บ้าน</SelectItem>
-                    <SelectItem value="OTHER">อื่นๆ</SelectItem>
-                  </SelectContent>
-                </Select>
+                
 
-                <Select value={form.branchId} onValueChange={(v) => setForm({ ...form, branchId: v })}>
-                  <SelectTrigger className="w-full rounded-xl bg-gray-100"><SelectValue placeholder="เลือกสาขาที่ทำการสมัคร *" /></SelectTrigger>
-                  <SelectContent className="bg-white w-full">
-                    {branches.map((b) => (
-                      <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormField label="อีเมล" required>
+                  <Input
+                    disabled
+                    type="email"
+                    placeholder="อีเมล *"
+                    name="email"
+                    className="w-full pt-10 pb-4 pl-2 pr-4 border rounded-xl text-gray-400 bg-gray-100 focus:outline-none focus:ring focus:ring-paseo"
+                    value={form.email}
+                    required
+                  />
+                </FormField>
+
+                <FormField label="อาชีพ" required>
+                  <SimpleSelect
+                    value={form.occupation}
+                    placeholder="อาชีพ *"
+                    onChange={(value) => setForm({ ...form, occupation: value })}
+                    options={[
+                      { value: 'STUDENT', label: 'นักศึกษา' },
+                      { value: 'PRIVATE_EMPLOYEE', label: 'พนักงานเอกชน' },
+                      { value: 'STATE_ENTERPRISE', label: 'พนักงานรัฐวิสาหกิจ' },
+                      { value: 'FREELANCER', label: 'อาชีพอิสระ' },
+                      { value: 'BUSINESS_OWNER', label: 'เจ้าของกิจการ' },
+                      { value: 'HOMEMAKER', label: 'พ่อบ้าน - แม่บ้าน' },
+                      { value: 'OTHER', label: 'อื่นๆ' },
+                    ]}
+                  />
+                </FormField>
+
+                <FormField label="สาขาที่ทำการสมัคร" required>
+                  <SimpleSelect
+                    value={form.branchId}
+                    placeholder="เลือกสาขาที่ทำการสมัคร *"
+                    onChange={(value) => setForm({ ...form, branchId: value })}
+                    options={branches.map((b) => ({
+                      value: b.id,
+                      label: b.name,
+                    }))}
+                  />
+                </FormField>
               </div>
             )}
 
             {step === 2 && (
-              <div className="flex flex-col gap-4">
-                <Select value={form.residenceType} onValueChange={(v) => setForm({ ...form, residenceType: v })}>
-                  <SelectTrigger className="w-full rounded-xl bg-gray-100"><SelectValue placeholder="ประเภทที่อยู่ *" /></SelectTrigger>
-                  <SelectContent className="bg-white w-full">
-                    <SelectItem value="TOWNHOUSE">ทาวน์เฮาส์</SelectItem>
-                    <SelectItem value="CONDO">คอนโด</SelectItem>
-                    <SelectItem value="SINGLE_HOUSE">บ้านเดี่ยว</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="flex flex-col gap-0 pb-20">
+                <FormField label="ที่อยู่" required>
+                  <SimpleSelect
+                    value={form.residenceType}
+                    placeholder="ที่อยู่ *"
+                    onChange={(value) => setForm({ ...form, residenceType: value })}
+                    options={[
+                      { value: 'TOWNHOUSE', label: 'ทาวน์เฮาส์' },
+                      { value: 'CONDO', label: 'คอนโด' },
+                      { value: 'SINGLE_HOUSE', label: 'บ้านเดี่ยว' },
+                    ]}
+                  />
+                </FormField>
 
-                <Input name="houseNumber" placeholder="บ้านเลขที่ *" onChange={handleChange} value={form.houseNumber} />
-                <Input name="alley" placeholder="ซอย *" onChange={handleChange} value={form.alley} />
-                <Input name="subDistrict" placeholder="แขวง *" onChange={handleChange} value={form.subDistrict} />
-                <Input name="district" placeholder="เขต *" onChange={handleChange} value={form.district} />
-                <Input name="province" placeholder="จังหวัด *" onChange={handleChange} value={form.province} />
-                <Input name="postalCode" placeholder="รหัสไปรษณีย์ *" onChange={handleChange} value={form.postalCode} />
+                <FormField label="ที่อยู่" required>
+                  <Input
+                    type="text"
+                    placeholder="ที่อยู่ *"
+                    name="address"
+                    className="w-full pt-10 pb-4 pl-2 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo"
+                    onChange={(e) => setForm({ ...form, address: e.target.value })}
+                    value={form.address}
+                  />
+                </FormField>
+
+                {/* <FormField label="บ้านเลขที่" required>
+                  <Input
+                    type="text"
+                    placeholder="บ้านเลขที่ *"
+                    name="houseNumber"
+                    className="w-full pt-10 pb-4 pl-2 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo"
+                    onChange={(e) => setForm({ ...form, houseNumber: e.target.value })}
+                    value={form.houseNumber}
+                  />
+                </FormField>
+    
+                <FormField label="ซอย" required>
+                  <Input
+                    type="text"
+                    placeholder="ซอย *"
+                    name="alley"
+                    className="w-full pt-10 pb-4 pl-2 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo"
+                    onChange={(e) => setForm({ ...form, alley: e.target.value })}
+                    value={form.alley}
+                  />
+                </FormField> */}
+    
+                <ThaiAddressSelect
+                  value={{
+                    province: form.province,
+                    district: form.district,
+                    subDistrict: form.subDistrict,
+                    postalCode: form.postalCode,
+                  }}
+                  onChange={(addr) =>
+                    setForm(f => ({
+                      ...f,
+                      ...addr,
+                    }))
+                  }
+                />
               </div>
             )}
 
             {step === 3 && (
-              <>
+              <div className="flex flex-col gap-4 pb-10">
                 <Input name="referralCode" placeholder="รหัสผู้แนะนำ (ถ้ามี)" onChange={handleChange} value={form.referralCode} />
                 <p className="font-semibold mb-2 mt-4">ความสนใจ</p>
                 <div className="flex flex-wrap gap-2">
@@ -346,7 +475,7 @@ export default function CompleteProfilePage() {
                         className={cn(
                           "cursor-pointer rounded-full px-3 py-1 text-sm transition",
                           selected
-                            ? "bg-color-paseo text-white hover:bg-color-paseo-hover"
+                            ? "bg-paseo text-white hover:bg-paseo-hover"
                             : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                         )}
                       >
@@ -355,20 +484,21 @@ export default function CompleteProfilePage() {
                     );
                   })}
                 </div>
-              </>
+                {error && <p className="text-red-500 mt-4 text-center">{error}</p>}
+              </div>
             )}
 
-            {error && <p className="text-red-500 mt-4 text-center">{error}</p>}
+            
 
-            <div className="fixed bottom-0 left-0 px-4 py-2 w-full flex justify-between items-center blur rounded-t-xl shadow-lg border">
+            <div className="md:relative fixed bottom-0 left-0 px-4 py-2 w-full flex justify-between items-center blur rounded-t-xl shadow-lg md:shadow-none border md:border-none md:mt-4">
               {step > 1 ? (
                 <button
                   type="button"
                   onClick={handlePrevStep}
-                  className="w-40% text-white px-2 pl-4 py-2 rounded-full flex flex-row gap-2 items-center justify-between shadow bg-paseo-dark shadow"
+                  className="w-40% text-sm text-white px-2 pl-4 py-2 rounded-full flex flex-row gap-2 items-center justify-between shadow bg-paseo-dark shadow"
                 >
                   ย้อนกลับ
-                  <FaArrowLeft color="#000" className="bg-white rounded-full p-1" size={32} />
+                  <FaArrowLeft color="#000" className="bg-white rounded-full p-1" size={24} />
                 </button>
               ) : <div className="invisible"></div>}
 
@@ -376,22 +506,89 @@ export default function CompleteProfilePage() {
                 <button
                   type="button"
                   onClick={handleNextStep}
-                 className="w-40% text-white px-2 pr-4 py-2 rounded-full flex flex-row gap-2 items-center justify-between shadow bg-paseo shadow"
+                 className="w-40% text-sm text-white px-2 pr-4 py-2 rounded-full flex flex-row gap-2 items-center justify-between shadow bg-paseo shadow"
                 >
-                  <FaArrowRight color="#000" className="bg-white rounded-full p-1" size={32} />
+                  <FaArrowRight color="#000" className="bg-white rounded-full p-1" size={24} />
                   ถัดไป
                 </button>
               ) : (
                 <button
                   type="submit"
-                  className="w-40% text-white px-2 pr-4 py-2 rounded-full flex flex-row gap-2 items-center justify-between shadow bg-paseo shadow"
+                  className="w-40% text-sm text-white px-2 pr-4 py-2 rounded-full flex flex-row gap-2 items-center justify-between shadow bg-paseo shadow"
                 >
-                  <FaSave color="#000" className="bg-white rounded-full p-1" size={32} />
+                  <FaSave color="#000" className="bg-white rounded-full p-1" size={24} />
                   บันทึก
                 </button>
               )}
             </div>
           </form>
+
+          {showOtpModal && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50"
+                      style={{ backdropFilter: "blur(2px)" }}
+                    >
+              <div className="bg-white rounded-xl p-6 w-[90%] max-w-sm">
+                <h3 className="text-lg font-semibold mb-2 text-center">
+                  ยืนยันเบอร์โทรศัพท์
+                </h3>
+
+                <p className="text-sm text-gray-600 text-center mb-4">
+                  ส่งรหัส OTP ไปที่ <strong>{form.phone}</strong>
+                </p>
+
+                <Input
+                  placeholder="กรอกรหัส OTP"
+                  value={otp}
+                  onChange={(e) => {
+                    setOtp(e.target.value)
+                    setOtpError("")
+                  }}
+                />
+
+                {otpError && (
+                  <p className="text-red-500 text-sm mt-2 text-center">{otpError}</p>
+                )}
+
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setShowOtpModal(false)}
+                  >
+                    ยกเลิก
+                  </Button>
+
+                  <Button
+                    className="w-full"
+                    onClick={async () => {
+                      const res = await fetch("/api/auth/verify-otp", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          phone: form.phone,
+                          otp,
+                          purpose: "VERIFY_PHONE",
+                        }),
+                      })
+
+                      const data = await res.json()
+
+                      if (!res.ok) {
+                        setOtpError(data.error || "OTP ไม่ถูกต้อง")
+                        return
+                      }
+
+                      setIsPhoneVerified(true)
+                      setShowOtpModal(false)
+                      setStep(step + 1)
+                    }}
+                  >
+                    ยืนยัน OTP
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
     </div>
   )

@@ -51,27 +51,19 @@ export default function BannerRegisterPage() {
 
     fetchBanners()
   }, [])
+  
 
   useEffect(() => {
   }, [emblaApi])
 
   return (
-    <div className="embla w-full" ref={emblaRef}>
-      <div className="embla__container h-full flex">
-        {loading
-          ?
-            Array.from({ length: 3 }).map((_, i) => (
+    <>
+      {loading || banners.length === 0 ? null : (
+        <div className="embla w-full overflow-hidden rounded-2xl shadow" ref={emblaRef}>
+          <div className="embla__container h-full flex">
+            {banners.map((banner) => (
               <div
-                key={i}
-                className="embla__slide flex items-center justify-center rounded-2xl"
-              >
-                <Skeleton className="w-full aspect-square rounded-xl" />
-              </div>
-            ))
-          :
-            banners.map((banner) => (
-              <div
-                className="embla__slide flex items-center justify-center rounded-2xl"
+                className="embla__slide flex items-center justify-center overflow-hidden"
                 key={banner.id}
               >
                 <Link
@@ -84,12 +76,30 @@ export default function BannerRegisterPage() {
                     alt={banner.title}
                     width={600}
                     height={600}
-                    className="object-contain w-full h-full rounded-xl"
+                    className="object-cover w-full md:max-h-homebanner max-h-homebanner-mb h-60"
                   />
                 </Link>
               </div>
             ))}
-      </div>
-    </div>
+          </div>
+        </div>
+      )}
+
+      {/* แสดง Skeleton เฉพาะตอนโหลด */}
+      {loading && (
+        <div className="embla w-full overflow-hidden rounded-2xl shadow">
+          <div className="embla__container h-full flex">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="embla__slide flex items-center justify-center"
+              >
+                <Skeleton className="w-full aspect-square rounded-xl" />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
   )
 }

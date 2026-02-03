@@ -30,8 +30,11 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     }
 
     // เช็คว่าผู้ใช้เข้าร่วมแล้วหรือยัง
-    const exists = await prisma.rewardParticipation.findUnique({
-      where: { rewardId_userId: { rewardId: reward.id, userId: session.user.id } },
+    const exists = await prisma.rewardParticipation.findFirst({
+      where: {
+        rewardId: reward.id,
+        userId: session.user.id,
+      },
     });
     if (exists) {
       return NextResponse.json({ error: "คุณได้เข้าร่วมกิจกรรมนี้แล้ว" }, { status: 400 });

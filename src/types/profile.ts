@@ -35,8 +35,6 @@ export type Profile = {
   /** ประเภทที่อยู่อาศัย */
   residenceType: "TOWNHOUSE" | "CONDO" | "SINGLE_HOUSE" | null;
 
-  /** ซอย */
-  alley: string | null;
 
   /** เขต/อำเภอ */
   district: string | null;
@@ -44,8 +42,14 @@ export type Profile = {
   /** จังหวัด */
   province: string | null;
 
+  /** ที่อยู่ */
+  address: string | null;
+
   /** เลขที่บ้าน */
-  houseNumber: string | null;
+  // houseNumber: string | null;
+  
+  /** ซอย */
+  //alley: string | null;
 
   /** แขวง/ตำบล */
   subDistrict: string | null;

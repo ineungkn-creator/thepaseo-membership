@@ -29,6 +29,7 @@ model User_Lost {
 model ShopCategory {
   id        String   @id @default(uuid())
   name      String
+  sortOrder Int      @default(0)
   slug      String   @unique
   imageUrl  String?
   createdAt DateTime @default(now())
@@ -68,6 +69,7 @@ model Branch {
   isActive  Boolean    @default(true)
   createdAt DateTime   @default(now())
   imageUrl  String?
+  sortOrder Int        @default(0)
   receipts  Receipt[]
   shops     Shop[]
   users     User[]
@@ -78,39 +80,49 @@ model Branch {
 }
 
 model Tag {
-  id        String   @id @default(uuid())
-  name      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id        String        @id @default(uuid())
+  name      String        @unique
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
   relations TagRelation[]
 }
 
 model TagRelation {
   id         String   @id @default(uuid())
   tagId      String
-  targetId   String    // UUID ของ Shop, Campaign, Reward, Event, Coupon, etc
-  targetType String    // เช่น "shop" | "campaign" | "reward" | "event" | "coupon"
-
-  tag        Tag       @relation(fields: [tagId], references: [id])
-
-  createdAt  DateTime  @default(now())
+  targetId   String
+  targetType String
+  createdAt  DateTime @default(now())
+  tag        Tag      @relation(fields: [tagId], references: [id])
 
   @@index([tagId])
   @@index([targetId, targetType])
 }
 
 model OtpVerification {
-  id           String     @id @default(uuid())
-  phone        String
-  otpCode      String
-  expiresAt    DateTime
-  createdAt    DateTime   @default(now())
-  purpose      OtpPurpose
-  requestCount Int        @default(1)
-  verifiedAt   DateTime?
+  id         String     @id @default(uuid())
+  phone      String
+  expiresAt  DateTime
+  createdAt  DateTime   @default(now())
+  purpose    OtpPurpose
+  verifiedAt DateTime?
+  provider   String?
+  token      String?
 
-  @@index([phone])
+  @@index([phone, purpose, createdAt])
+}
+
+model OtpRequestLog {
+  id        String       @id @default(uuid())
+  phone     String
+  purpose   OtpPurpose
+  status    OtpLogStatus
+  reason    String?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime     @default(now())
+
+  @@index([phone, purpose, createdAt])
 }
 
 model Popup {
@@ -246,7 +258,7 @@ model BannerPoint {
 model Help {
   id        String   @id @default(uuid())
   question  String
-  answer    String
+  answer    String   @db.LongText
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -256,6 +268,12 @@ model Help {
 model HelpTerms {
   id          String  @id @default(uuid())
   description String? @db.Text
+  email1      String?
+  email2      String?
+  email3      String?
+  phone1      String?
+  phone2      String?
+  phone3      String?
 }
 
 model Interest {
@@ -266,18 +284,16 @@ model Interest {
 
 model User {
   id                     String                  @id @default(uuid())
-  role                   Role                    @default(USER)
-  name                   String
   firstName              String?
   lastName               String?
-  email                  String?                 @unique
-  houseNumber            String?
-  alley                  String?
+  address                String?
   subDistrict            String?
   district               String?
   postalCode             String?
   phone                  String?                 @unique
   password               String?
+  name                   String
+  email                  String?                 @unique
   avatar                 String?                 @db.Text
   overrideNote           String?
   totalSpending          Int                     @default(0)
@@ -287,6 +303,7 @@ model User {
   referralCampaign       String?
   createdAt              DateTime                @default(now())
   updatedAt              DateTime                @updatedAt
+  role                   Role                    @default(USER)
   dateOfBirth            DateTime?
   gender                 Gender?
   province               String?
@@ -361,6 +378,7 @@ model Receipt {
 model UploadTerm {
   id          String  @id @default(uuid())
   description String? @db.Text
+  images      String? @db.Text
 }
 
 model Reward {
@@ -442,8 +460,8 @@ model RewardParticipation {
   reward     Reward    @relation(fields: [rewardId], references: [id])
   user       User      @relation(fields: [userId], references: [id])
 
-  @@unique([rewardId, userId])
   @@index([userId], map: "RewardParticipation_userId_fkey")
+  @@index([rewardId], map: "RewardParticipation_rewardId_fkey")
 }
 
 model Redemption {
@@ -589,6 +607,7 @@ model PointSetting {
   receiptRatePoints Int      @default(1)
   updatedAt         DateTime @updatedAt
   isDefault         Boolean  @default(true)
+  pointExpireYears  Int?
 }
 
 model PointTransaction {
@@ -704,6 +723,12 @@ model Termsofservice {
 model BusinessInformation {
   id          String  @id @default(uuid())
   description String? @db.Text
+}
+
+enum OtpLogStatus {
+  SUCCESS
+  BLOCKED
+  FAILED
 }
 
 enum BranchType {

@@ -22,6 +22,7 @@ export default function EditEventPage() {
   const { id } = params;
 
   // Form state
+  const [shopSearch, setShopSearch] = useState("");
   const [name, setName] = useState("");
   const [linkShare, setlinkShare] = useState("");
   const [description, setDescription] = useState("");
@@ -164,208 +165,218 @@ setEndDate(new Date(data.endDate).toISOString().slice(0,16));
     <div className="w-full p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* ฝั่งซ้าย = Form */}
       <div className="w-full">
-      <h1 className="text-2xl font-bold mb-4">แก้ไข Event</h1>
-      <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 shadow rounded-xl">
-        {/* File upload */}
-        <div>
-          <label className="block mb-1 font-medium">รูป Event</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              if (e.target.files && e.target.files[0]) setFile(e.target.files[0]);
-            }}
-            className="w-full"
-          />
-          {preview ? (
-            <Image
-              width={600}
-              height={600}
-              src={preview}
-              alt="preview"
-              className="mt-2 w-32 h-32 object-cover rounded"
-            />
-          ) : existingImage ? (
-            <Image
-              width={600}
-              height={600}
-              src={existingImage}
-              alt="existing"
-              className="mt-2 w-32 h-32 object-cover rounded"
-            />
-          ) : null}
-        </div>
-
-        <div>
-          <label className="block mb-1 font-medium">ชื่อ Event</label>
-          <input
-            type="text"
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border rounded"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-1 font-medium">ลิงค์แชร์</label>
-          <input
-            type="text"
-            value={linkShare}
-            onChange={(e) => setlinkShare(e.target.value)}
-            placeholder="https://thepaseo.co.th/"
-            className="w-full px-3 py-2 border rounded"
-            required
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
+        <h1 className="text-2xl font-bold mb-4">แก้ไข Event</h1>
+        <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 shadow rounded-xl">
+          {/* File upload */}
           <div>
-            <label className="block mb-1 font-medium">วันที่เริ่ม</label>
+            <label className="block mb-1 font-medium">รูป Event</label>
             <input
-              type="datetime-local"
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) setFile(e.target.files[0]);
+              }}
+              className="w-full"
+            />
+            {preview ? (
+              <Image
+                width={600}
+                height={600}
+                src={preview}
+                alt="preview"
+                className="w-full mt-2 rounded-lg"
+              />
+            ) : existingImage ? (
+              <Image
+                width={600}
+                height={600}
+                src={existingImage}
+                alt="existing"
+                className="w-full mt-2 rounded-lg"
+              />
+            ) : null}
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium">ชื่อ Event</label>
+            <input
+              type="text"
               required
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               className="w-full px-3 py-2 border rounded"
             />
           </div>
+
           <div>
-            <label className="block mb-1 font-medium">วันที่สิ้นสุด</label>
+            <label className="block mb-1 font-medium">ลิงค์แชร์</label>
             <input
-              type="datetime-local"
+              type="text"
+              value={linkShare}
+              onChange={(e) => setlinkShare(e.target.value)}
+              placeholder="https://thepaseo.co.th/"
+              className="w-full px-3 py-2 border rounded"
               required
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-3 py-2 border rounded"
             />
           </div>
-        </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block mb-1 font-medium">ใช้แต้ม</label>
-            <input
-              type="number"
-              min={0}
-              value={pointCost}
-              onChange={(e) => setPointCost(Number(e.target.value))}
-              className="w-full px-3 py-2 border rounded"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block mb-1 font-medium">วันที่เริ่ม</label>
+              <input
+                type="datetime-local"
+                required
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full px-3 py-2 border rounded"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 font-medium">วันที่สิ้นสุด</label>
+              <input
+                type="datetime-local"
+                required
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full px-3 py-2 border rounded"
+              />
+            </div>
           </div>
-          <div>
-            <label className="block mb-1 font-medium">ได้แต้ม</label>
-            <input
-              type="number"
-              min={0}
-              value={pointEarn}
-              onChange={(e) => setPointEarn(Number(e.target.value))}
-              className="w-full px-3 py-2 border rounded"
-            />
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">จำนวนทั้งหมด</label>
-            <input
-              type="number"
-              min={0}
-              value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-              className="w-full px-3 py-2 border rounded"
-            />
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">จำกัดต่อผู้ใช้</label>
-            <input
-              type="number"
-              min={1}
-              value={maxPerUser}
-              onChange={(e) => setMaxPerUser(Number(e.target.value))}
-              className="w-full px-3 py-2 border rounded"
-            />
-          </div>
-        </div>
 
-        <div>
-          <label className="block mb-1 font-medium">รายละเอียด</label>
-          <RichTextEditor value={description} onChange={setDescription} />
-        </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block mb-1 font-medium">ใช้แต้ม</label>
+              <input
+                type="number"
+                min={0}
+                value={pointCost}
+                onChange={(e) => setPointCost(Number(e.target.value))}
+                className="w-full px-3 py-2 border rounded"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 font-medium">ได้แต้ม</label>
+              <input
+                type="number"
+                min={0}
+                value={pointEarn}
+                onChange={(e) => setPointEarn(Number(e.target.value))}
+                className="w-full px-3 py-2 border rounded"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 font-medium">จำนวนทั้งหมด</label>
+              <input
+                type="number"
+                min={0}
+                value={quantity}
+                onChange={(e) => setQuantity(Number(e.target.value))}
+                className="w-full px-3 py-2 border rounded"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 font-medium">จำกัดต่อผู้ใช้</label>
+              <input
+                type="number"
+                min={1}
+                value={maxPerUser}
+                onChange={(e) => setMaxPerUser(Number(e.target.value))}
+                className="w-full px-3 py-2 border rounded"
+              />
+            </div>
+          </div>
 
-        <div>
-          <label className="block mb-1 font-medium">เงื่อนไข</label>
-          <RichTextEditor value={terms} onChange={setTerms} />
-        </div>
+          <div>
+            <label className="block mb-1 font-medium">รายละเอียด</label>
+            <RichTextEditor value={description} onChange={setDescription} />
+          </div>
 
-        {/* Multi-select branches */}
-        <div>
-          <label className="block mb-1 font-medium">สาขา</label>
-          <div className="flex flex-wrap gap-2">
-            {branches.map((b) => {
-              const isSelected = selectedBranches.includes(b.id);
-              return (
-                <Badge
-                  key={b.id}
-                  className={`cursor-pointer ${
-                    isSelected ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800"
-                  }`}
-                  onClick={() => {
-                    if (isSelected) {
-                      setSelectedBranches(selectedBranches.filter((id) => id !== b.id));
-                    } else {
-                      setSelectedBranches([...selectedBranches, b.id]);
+          <div>
+            <label className="block mb-1 font-medium">เงื่อนไข</label>
+            <RichTextEditor value={terms} onChange={setTerms} />
+          </div>
+
+          {/* Multi-select branches */}
+          <div>
+            <label className="block mb-1 font-medium">สาขา</label>
+            <div className="flex flex-wrap gap-2">
+              {branches.map((b) => {
+                const isSelected = selectedBranches.includes(b.id);
+                return (
+                  <span
+                    key={b.id}
+                    onClick={() =>
+                      setSelectedBranches((prev) =>
+                        isSelected
+                          ? prev.filter((id) => id !== b.id)
+                          : [...prev, b.id]
+                      )
                     }
-                  }}
-                >
-                  {b.name}
-                </Badge>
-              );
-            })}
+                    className={`px-3 py-1 rounded-lg cursor-pointer ${
+                      isSelected ? "bg-paseo text-white" : "bg-gray-200 text-gray-800"
+                    }`}
+                  >
+                    {b.name}
+                  </span>
+                );
+              })}
+            </div>
           </div>
-        </div>
 
-        {/* Multi-select shops */}
-        <div>
-          <label className="block mb-1 font-medium">ร้านค้า</label>
-          <select
-            multiple
-            value={selectedShops}
-            onChange={(e) =>
-              setSelectedShops(
-                Array.from(e.target.selectedOptions, (option) => option.value)
-              )
-            }
-            className="w-full px-3 py-2 border rounded"
-          >
-            {shops.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </div>
+          {/* Multi-select shops */}
+          <div>
+            <label className="block mb-1 font-medium">ร้านค้า</label>
+            <input
+              type="text"
+              placeholder="🔍 ค้นหาร้านค้า..."
+              value={shopSearch}
+              onChange={(e) => setShopSearch(e.target.value)}
+              className="w-full border p-2 rounded-lg mb-2"
+            />
 
-        <TagSelector value={tags} onChange={setTags} />
+            <select
+              multiple
+              value={selectedShops}
+              onChange={(e) =>
+                setSelectedShops(
+                  Array.from(e.target.selectedOptions, (option) => option.value)
+                )
+              }
+              className="w-full px-3 py-2 border rounded"
+            >
+              {shops
+                .filter((s) => s.name.toLowerCase().includes(shopSearch.toLowerCase()))
+                .map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+            </select>
+          </div>
 
-        <div className="flex justify-end space-x-2">
-          <button
-            type="button"
-            className="px-4 py-2 border rounded hover:bg-gray-100"
-            onClick={() => router.push("/admin/event")}
-          >
-            ยกเลิก
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="text-white p-3 rounded-xl bg-paseo"
-          >
-            {loading ? "กำลังบันทึก..." : "บันทึก"}
-          </button>
-        </div>
-      </form>
-    </div>
+          <TagSelector value={tags} onChange={setTags} />
+
+          <div className="flex justify-end space-x-2">
+            <button
+              type="button"
+              className="px-4 py-2 border rounded hover:bg-gray-100"
+              onClick={() => router.push("/admin/event")}
+            >
+              ยกเลิก
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="text-white p-3 rounded-xl bg-paseo"
+            >
+              {loading ? "กำลังบันทึก..." : "บันทึก"}
+            </button>
+          </div>
+        </form>
+      </div>
 
     {/* ฝั่งขวา = Preview */}
-      <div className="relative w-full p-4 mt-0 mb-20 md:mb-20 mb-4 bg-gray-100 rounded-xl border shadow-lg">
+      <div className="sticky top-0 w-full p-4 mt-0 mb-20 md:mb-20 mb-4 bg-gray-100 rounded-xl border shadow-lg">
         <h2 className="text-xl font-bold mb-4">พรีวิว</h2>
         <div className="space-y-4">
           {preview ? (

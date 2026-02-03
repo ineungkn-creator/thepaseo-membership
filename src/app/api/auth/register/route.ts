@@ -18,8 +18,9 @@ export async function POST(req: Request) {
       email,
       occupation,
       residenceType,
-      houseNumber,
-      alley,
+      address,
+      //houseNumber,
+      //alley,
       subDistrict,
       district,
       province,
@@ -32,15 +33,9 @@ export async function POST(req: Request) {
     const name = `${firstName} ${lastName}`.trim();
 
     // ✅ ตรวจสอบ email
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) {
+    const existingEmail = await prisma.user.findUnique({ where: { email } });
+    if (existingEmail) {
       return NextResponse.json({ error: "อีเมลนี้ถูกใช้งานแล้ว" }, { status: 400 });
-    }
-
-    // ✅ ตรวจสอบ phone
-    const existingPhone = await prisma.user.findUnique({ where: { phone } });
-    if (existingPhone) {
-      return NextResponse.json({ error: "เบอร์โทรนี้ถูกใช้งานแล้ว" }, { status: 400 });
     }
 
     // ✅ สร้าง referral code
@@ -87,8 +82,9 @@ export async function POST(req: Request) {
         residenceType: residenceType || null,
         province,
         branchId: branchRecord.id,
-        houseNumber,
-        alley,
+        address,
+      //houseNumber,
+      //alley,
         subDistrict,
         district,
         postalCode,

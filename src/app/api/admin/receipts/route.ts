@@ -3,8 +3,15 @@ import { NextResponse } from "next/server";
 import { PrismaClient, PointType } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authConfig } from "@/lib/auth.config";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+
+import {
+  getUploadFolder,
+  getLocalPath,
+  ensureDir,
+  makePublicUrl,
+} from "@/lib/storage";
+
+import fs from "fs";
 
 import { sendLinePointCard } from "@/lib/lineNotify";
 
@@ -57,7 +64,17 @@ export async function PATCH(req: Request) {
       }
 
       const pointsToAdd =
-        Math.floor(receipt.amount / setting.receiptRateAmount) * setting.receiptRatePoints;
+        Math.floor(receipt.amount / setting.receiptRateAmount) *
+        setting.receiptRatePoints;
+
+      // ⭐ คำนวณวันหมดอายุ
+      let expiresAt: Date | null = null;
+      if (setting.pointExpireYears && setting.pointExpireYears > 0) {
+        expiresAt = new Date();
+        expiresAt.setFullYear(
+          expiresAt.getFullYear() + setting.pointExpireYears
+        );
+      }
 
       // ✅ ตรวจสอบหรือสร้าง PointBalance
       let pointBalance = await prisma.pointBalance.findUnique({
@@ -71,9 +88,8 @@ export async function PATCH(req: Request) {
 
       const updatedBalance = pointBalance.balance + pointsToAdd;
 
-      // ✅ Transaction — อัปเดตแต้มและสร้าง log
       await prisma.$transaction(async (tx) => {
-        // update user
+        // update spending
         await tx.user.update({
           where: { id: receipt.userId },
           data: {
@@ -85,6 +101,16 @@ export async function PATCH(req: Request) {
         await tx.pointBalance.update({
           where: { userId: receipt.userId },
           data: { balance: updatedBalance },
+        });
+
+        // ⭐ create wallet (FIFO)
+        await tx.pointWallet.create({
+          data: {
+            userId: receipt.userId,
+            source: "RECEIPT",
+            points: pointsToAdd,
+            expiresAt, // ✅ ตอนนี้มีตัวแปรแล้ว
+          },
         });
 
         // log transaction
@@ -105,12 +131,12 @@ export async function PATCH(req: Request) {
       });
 
       // ✅ แจ้งเตือน LINE เฉพาะตอน “ได้รับแต้ม”
-      await sendLinePointCard(receipt.userId, {
-        type: "ADD",
-        amount: pointsToAdd,
-        source: `ใบเสร็จร้าน ${receipt.shop?.name || ""}`,
-        balance: updatedBalance,
-      });
+      //await sendLinePointCard(receipt.userId, {
+      //  type: "ADD",
+      //  amount: pointsToAdd,
+      //  source: `ใบเสร็จร้าน ${receipt.shop?.name || ""}`,
+      //  balance: updatedBalance,
+      //});
     }
 
     return NextResponse.json({ success: true, receipt });
@@ -129,7 +155,8 @@ export async function POST(req: Request) {
 
   try {
     const formData = await req.formData();
-    const file = formData.get("file") as File;
+    const file = formData.get("file") as File | null;
+
     const userId = formData.get("userId") as string;
     const amount = parseInt(formData.get("amount") as string, 10);
     const branchId = formData.get("branchId") as string;
@@ -139,24 +166,31 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // ✅ Upload file
+    // -------------------------------------------------------------
+    // 📌 Upload file → ใช้ Storage System กลาง (Cloud-ready)
+    // -------------------------------------------------------------
     let fileUrl: string | null = null;
     let fileType: "IMAGE" | "PDF" | null = null;
 
     if (file && file.size > 0) {
-      const buffer = Buffer.from(await file.arrayBuffer());
+      const folder = getUploadFolder("receipts"); // อ่านจาก ENV
       const fileName = `${Date.now()}-${file.name}`;
-      const filePath = path.join(process.cwd(), "public/uploads/admin/receipts", fileName);
-      await mkdir(path.dirname(filePath), { recursive: true });
-      await writeFile(filePath, buffer);
 
-      fileUrl = `/uploads/admin/receipts/${fileName}`;
-      fileType = file.type.startsWith("image/") ? "IMAGE" : "PDF";
+      const localPath = getLocalPath(folder, fileName);
+      ensureDir(localPath);
+
+      const buffer = Buffer.from(await file.arrayBuffer());
+      fs.writeFileSync(localPath, buffer);
+
+      fileUrl = makePublicUrl(folder, fileName);
+      fileType = file.type.toLowerCase().startsWith("image/") ? "IMAGE" : "PDF";
     }
 
     const reviewedById = session.user.id;
 
-    // ✅ สร้างใบเสร็จ (สถานะ APPROVED)
+    // -------------------------------------------------------------
+    // 📌 บันทึกใบเสร็จ (อนุมัติทันที)
+    // -------------------------------------------------------------
     const receipt = await prisma.receipt.create({
       data: {
         userId,
@@ -172,19 +206,31 @@ export async function POST(req: Request) {
       include: { shop: true, branch: true },
     });
 
-    // ✅ คำนวณแต้ม
+    // -------------------------------------------------------------
+    // 📌 คำนวณและอัปเดตแต้ม
+    // -------------------------------------------------------------
     const setting = await prisma.pointSetting.findFirst();
     if (!setting) {
       return NextResponse.json({ error: "Point setting not found" }, { status: 500 });
     }
 
+    // ⭐ คำนวณวันหมดอายุ
+    let expiresAt: Date | null = null;
+    if (setting.pointExpireYears && setting.pointExpireYears > 0) {
+      expiresAt = new Date();
+      expiresAt.setFullYear(
+        expiresAt.getFullYear() + setting.pointExpireYears
+      );
+    }
+
     const pointsToAdd =
       Math.floor(receipt.amount / setting.receiptRateAmount) * setting.receiptRatePoints;
 
-    // ✅ Point Balance & Transaction
     let pointBalance = await prisma.pointBalance.findUnique({ where: { userId } });
     if (!pointBalance) {
-      pointBalance = await prisma.pointBalance.create({ data: { userId, balance: 0 } });
+      pointBalance = await prisma.pointBalance.create({
+        data: { userId, balance: 0 },
+      });
     }
 
     const updatedBalance = pointBalance.balance + pointsToAdd;
@@ -209,17 +255,28 @@ export async function POST(req: Request) {
           description: "พอยท์จากการส่งใบเสร็จ",
         },
       });
+
+      await tx.pointWallet.create({
+        data: {
+          userId: receipt.userId,
+          source: "RECEIPT",
+          points: pointsToAdd,
+          expiresAt, // ⭐ สำคัญ
+        },
+      });
+
     });
 
-    // ✅ แจ้งเตือน LINE เมื่อได้รับแต้ม (Admin แอดให้)
-    await sendLinePointCard(userId, {
-      type: "ADD",
-      amount: pointsToAdd,
-      source: `ใบเสร็จร้าน ${receipt.shop?.name || ""}`,
-      balance: updatedBalance,
-    });
+    // แจ้งเตือน LINE
+    //await sendLinePointCard(userId, {
+    //  type: "ADD",
+    //  amount: pointsToAdd,
+    //  source: `ใบเสร็จร้าน ${receipt.shop?.name || ""}`,
+    //  balance: updatedBalance,
+    //});
 
     return NextResponse.json({ success: true, receipt });
+
   } catch (error) {
     console.error("❌ POST admin receipts error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

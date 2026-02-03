@@ -41,7 +41,7 @@ export default async function AdminLayout({
       </Sheet>
 
       {/* Content */}
-      <main className="flex-1 p-4 overflow-y-auto bg-gray-50">{children}</main>
+      <main className="flex-1 p-4 overflow-y-auto from-paseo">{children}</main>
     </div>
   );
 }

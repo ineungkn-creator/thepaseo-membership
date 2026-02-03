@@ -29,10 +29,11 @@ export async function getProfile() {
           }
         },
         residenceType: true,
-        alley: true,
         district: true,
         province: true,
-        houseNumber: true,
+        address: true,
+        //houseNumber: true,
+        //alley: true,
         subDistrict: true,
         postalCode: true,
         avatar: true,

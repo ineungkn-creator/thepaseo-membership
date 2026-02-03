@@ -1,3 +1,4 @@
+//api/profile/reward
 import { getServerSession } from "next-auth";
 import { authConfig } from "@/lib/auth.config";
 import { PrismaClient } from "@prisma/client";
@@ -9,7 +10,7 @@ const prisma = new PrismaClient();
  * ✅ GET /api/profile/reward
  * ดึงเฉพาะ Reward ที่ user เคยแลก (จาก RewardParticipation)
  */
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session = await getServerSession(authConfig);
     if (!session?.user?.id) {
@@ -17,18 +18,29 @@ export async function GET() {
     }
 
     const userId = session.user.id;
+    const { searchParams } = new URL(req.url);
 
-    // ✅ ดึง reward ที่ user แลกไว้ทั้งหมด
-    const rewards = await prisma.rewardParticipation.findMany({
+    const page = Number(searchParams.get("page") ?? 1);
+    const pageSize = 20;
+    const skip = (page - 1) * pageSize;
+    const now = new Date();
+
+    const participations = await prisma.rewardParticipation.findMany({
       where: { userId },
       include: { reward: true },
       orderBy: { joinedAt: "desc" },
     });
 
-    return NextResponse.json({
-      userId,
-      rewards: rewards.map((rp) => ({
+    const mapped = participations.map((rp) => {
+      let status: "ACTIVE" | "EXPIRED" | "REDEEMED" = "ACTIVE";
+
+      if (rp.redeemed) status = "REDEEMED";
+      else if (rp.reward.endDate && rp.reward.endDate < now)
+        status = "EXPIRED";
+
+      return {
         id: rp.id,
+        status,
         redeemed: rp.redeemed,
         redeemedAt: rp.redeemedAt,
         redeemCode: rp.redeemCode,
@@ -40,7 +52,26 @@ export async function GET() {
           endDate: rp.reward.endDate,
           pointCost: rp.reward.pointCost,
         },
-      })),
+      };
+    });
+
+    // 🔹 Sorting (เหมือน coupon)
+    const sorted = [
+      ...mapped.filter(r => r.status === "ACTIVE"),
+      ...mapped.filter(r => r.status === "EXPIRED"),
+      ...mapped.filter(r => r.status === "REDEEMED"),
+    ];
+
+    const total = sorted.length;
+    const totalPages = Math.ceil(total / pageSize);
+    const items = sorted.slice(skip, skip + pageSize);
+
+    return NextResponse.json({
+      items,
+      page,
+      pageSize,
+      total,
+      totalPages,
     });
   } catch (error) {
     console.error("❌ Error fetching rewards:", error);

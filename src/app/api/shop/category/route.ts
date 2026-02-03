@@ -15,7 +15,7 @@ export async function GET() {
         },
       },
       orderBy: {
-        name: 'asc',
+        sortOrder: "asc",
       },
     });
 

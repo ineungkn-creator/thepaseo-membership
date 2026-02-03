@@ -1,3 +1,4 @@
+//app/admin/help
 'use client'
 
 import { useEffect, useState } from "react";

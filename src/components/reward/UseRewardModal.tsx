@@ -31,24 +31,35 @@ export default function UseRewardModal({ show, onClose, userRewardId }: UseRewar
       };
     }, [show]);
 
-  useEffect(() => {
-    if (!show || !userRewardId) return;
-
-    async function fetchReward() {
-      try {
-        const res = await fetch(`/api/profile/reward/${userRewardId}`);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "ไม่สามารถโหลดข้อมูลรางวัลได้");
-        setReward(data);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+    // ⭐ รีเซ็ตสถานะ modal ทุกครั้งที่เปิด
+    useEffect(() => {
+      if (show) {
+        setLoading(true);
+        setError(null);
+        setReward(null);
       }
-    }
+    }, [show]);
 
-    fetchReward();
-  }, [show, userRewardId]);
+    // ⭐ โหลดข้อมูลใหม่ทุกครั้งที่ userRewardId เปลี่ยน
+    useEffect(() => {
+      if (!show || !userRewardId) return;
+
+      async function fetchReward() {
+        try {
+          const res = await fetch(`/api/profile/reward/${userRewardId}`);
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "ไม่สามารถโหลดข้อมูลรางวัลได้");
+          setReward(data);
+        } catch (err: any) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      fetchReward();
+    }, [show, userRewardId]);
+
 
   async function handleUseReward() {
     if (!reward) return;
@@ -81,86 +92,83 @@ export default function UseRewardModal({ show, onClose, userRewardId }: UseRewar
       className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50"
       style={{ backdropFilter: "blur(2px)" }}
     >
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center overflow-y-auto py-10">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center overflow-y-auto py-10">
             <div className="bg-gray-100 max-w-2xl w-full rounded-3xl shadow-lg animate-fade-in">
-                {loading && <p className="text-center p-6 text-gray-500">กำลังโหลด...</p>}
-                {error && <p className="text-center p-6 text-red-500">{error}</p>}
+              {loading && <p className="text-center p-6 text-gray-500">กำลังโหลด...</p>}
+              {error && <p className="text-center p-6 text-red-500">{error}</p>}
 
-                {reward && (
-                <>
+              {reward && (
+                <div className="relative overflow-hidden">
+
+                  <button
+                      onClick={onClose}
+                      className="absolute top-10 md:right-12 right-6 blur2 border border-gray-300 h-10 w-10 rounded-full text-xl font-bold"
+                  >
+                      X
+                  </button>
                     {/* ✅ รหัส Redeem */}
-                    <div className="px-4 pt-4 md:px-10">
-                    <div className="bg-gray-50 border rounded-xl p-4 text-center">
+                  <div className="px-4 pt-8 md:px-10">
+                    <div className="bg-gray-50 border rounded-xl py-8 text-center">
                         <p className="text-gray-500 text-sm mb-1">รหัสสำหรับใช้รางวัล</p>
                         <p className="text-3xl font-bold tracking-widest">
                         {reward.redeemCode || "ไม่มีรหัส"}
                         </p>
                     </div>
-                    </div>
 
-                    {/* ✅ รูป */}
-                    <div className="p-4 md:p-10">
-                    {reward.reward?.imageUrl && (
-                        <Image
-                          width={600}
-                          height={600}
-                          src={reward.reward.imageUrl}
-                          alt={reward.reward.name}
-                          className="w-full h-full object-cover rounded-xl shadow-md"
-                        />
-                    )}
-                    </div>
+                  </div>
 
-                    {/* ✅ รายละเอียด */}
-                    <div className="p-4 px-4 pt-0 md:p-10 md:pt-0">
-                    <div className="flex flex-col justify-between align-start gap-4 bg-white p-6 rounded-lg">
-                        {reward.reward?.expiresAt && (
-                        <p className="text-sm text-gray-500">
-                            หมดอายุ:{" "}
-                            {new Date(reward.reward.expiresAt).toLocaleDateString("th-TH")}
-                        </p>
-                        )}
+                  {/* ✅ รูป */}
+                  <div className="p-4 md:p-10">
+                  {reward.reward?.imageUrl && (
+                      <Image
+                        width={600}
+                        height={600}
+                        src={reward.reward.imageUrl}
+                        alt={reward.reward.name}
+                        className="w-full h-full object-cover rounded-xl shadow-md"
+                      />
+                  )}
+                  </div>
 
-                        <h1 className="text-base font-bold">{reward.reward?.name}</h1>
+                  {/* ✅ รายละเอียด */}
+                  <div className="p-4 px-4 pt-0 md:px-10 md:pt-0">
+                    <div className="flex flex-col justify-between align-start gap-4 bg-white p-6 rounded-lg pb-10 md:mb-0 mb-10">
 
-                        {reward.reward?.description && (
-                        <div className="mb-4">
-                            <div
-                            className="prose text-gray-700"
-                            dangerouslySetInnerHTML={{ __html: reward.reward?.description }}
-                            />
-                        </div>
-                        )}
+                      <h1 className="text-base font-bold">{reward.reward?.name}</h1>
+
+                      {reward.reward?.description && (
+                      <div className="mb-4">
+                          <div
+                          className="text-sm prose text-gray-700"
+                          dangerouslySetInnerHTML={{ __html: reward.reward?.description }}
+                          />
+                      </div>
+                      )}
 
                     </div>
-                    </div>
+                  </div>
 
-                    {/* ✅ ปุ่มใช้งาน */}
-                    <div className="bg-white border-t p-4 rounded-b-3xl flex flex-col gap-4">
-                    {!reward.used && (
-                        <button
-                        onClick={() => setShowConfirm(true)}
-                        className="btn-main w-full"
-                        >
-                        กดใช้รางวัลนี้
-                        </button>
-                    )}
-                    {reward.used && (
-                        <p className="text-center text-green-600 font-medium">
-                        ✅ ใช้แล้วเมื่อ{" "}
-                        {reward.usedAt
-                            ? new Date(reward.usedAt).toLocaleString("th-TH")
-                            : "ไม่ทราบเวลา"}
-                        </p>
-                    )}
-                    <button
-                        onClick={onClose}
-                        className="btn-cancel w-full"
-                    >
-                        ปิดหน้าต่าง
-                    </button>
-                    </div>
-                </>
+                  {/* ✅ ปุ่มใช้งาน */}
+                  <div className="md:relative fixed bottom-0 w-full bg-white border-t p-4 rounded-3xl md:rounded-b-3xl rounded-b-none flex flex-col items-center gap-2">
+                  {!reward.used && (
+                      <button
+                      onClick={() => setShowConfirm(true)}
+                      className="btn-main w-full"
+                      >
+                      กดใช้รางวัลนี้
+                      </button>
+                  )}
+                  {reward.used && (
+                      <p className="text-center text-green-600 font-medium">
+                      ✅ ใช้แล้วเมื่อ{" "}
+                      {reward.usedAt
+                          ? new Date(reward.usedAt).toLocaleString("th-TH")
+                          : "ไม่ทราบเวลา"}
+                      </p>
+                  )}
+                    
+                  </div>
+                </div>
                 )}
             </div>
 

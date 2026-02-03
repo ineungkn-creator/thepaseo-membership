@@ -3,7 +3,6 @@
 import { useEffect, useState, FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
 import RichTextEditor from "@/components/RichTextEditor/page";
 import TagSelector from "@/components/TagSelector";
 
@@ -187,7 +186,7 @@ export default function EditRewardPage() {
               height={600}
               src={preview}
               alt="preview"
-              className="mt-2 w-32 h-32 object-cover rounded"
+              className="w-full mt-2 rounded-lg"
             />
           ) : existingImage ? (
             <Image
@@ -195,7 +194,7 @@ export default function EditRewardPage() {
               height={600}
               src={existingImage}
               alt="existing"
-              className="mt-2 w-32 h-32 object-cover rounded"
+              className="w-full mt-2 rounded-lg"
             />
           ) : null}
         </div>
@@ -304,25 +303,25 @@ export default function EditRewardPage() {
           <label className="block mb-1 font-medium">สาขา</label>
           <div className="flex flex-wrap gap-2">
             {branches.map((b) => {
-              const isSelected = selectedBranches.includes(b.id);
-              return (
-                <Badge
-                  key={b.id}
-                  className={`cursor-pointer ${
-                    isSelected ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800"
-                  }`}
-                  onClick={() => {
-                    if (isSelected) {
-                      setSelectedBranches(selectedBranches.filter((id) => id !== b.id));
-                    } else {
-                      setSelectedBranches([...selectedBranches, b.id]);
+                const isSelected = selectedBranches.includes(b.id);
+                return (
+                  <span
+                    key={b.id}
+                    onClick={() =>
+                      setSelectedBranches((prev) =>
+                        isSelected
+                          ? prev.filter((id) => id !== b.id)
+                          : [...prev, b.id]
+                      )
                     }
-                  }}
-                >
-                  {b.name}
-                </Badge>
-              );
-            })}
+                    className={`px-3 py-1 rounded-lg cursor-pointer ${
+                      isSelected ? "bg-paseo text-white" : "bg-gray-200 text-gray-800"
+                    }`}
+                  >
+                    {b.name}
+                  </span>
+                );
+              })}
           </div>
         </div>
 
@@ -365,9 +364,6 @@ export default function EditRewardPage() {
               ))}
           </select>
 
-          <p className="text-sm text-gray-500 mt-1">
-            เลือกได้หลายร้าน หรือเลือก “จุดบริการ” หากของรางวัลนี้ไม่ได้อยู่ในร้านใด
-          </p>
         </div>
 
         <TagSelector value={tags} onChange={setTags} />

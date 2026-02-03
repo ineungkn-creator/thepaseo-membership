@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import {
+  getUploadFolder,
+  getLocalPath,
+  ensureDir,
+  makePublicUrl,
+} from "@/lib/storage";
 import fs from "fs";
 import path from "path";
 
@@ -70,18 +76,19 @@ export async function POST(req: Request) {
     const branchIds = formData.getAll("branchIds[]") as string[];
 
     // ✅ Handle file upload
-    const file = formData.get("file") as File;
-    let imageUrl: string | null = null;
+    const file = formData.get("file") as File | null;
+    let imageUrl: string | undefined;
 
     if (file && file.size > 0) {
-      const uploadsDir = path.join(process.cwd(), "public/uploads/admin/campaign");
-      if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+      const folder = getUploadFolder("campaign");
+      const fileName = `${Date.now()}-${file.name}`;
+      const localPath = getLocalPath(folder, fileName);
 
-      const filename = `${Date.now()}_${file.name}`;
-      const filePath = path.join(uploadsDir, filename);
+      ensureDir(localPath); 
       const buffer = Buffer.from(await file.arrayBuffer());
-      fs.writeFileSync(filePath, buffer);
-      imageUrl = `/uploads/admin/campaign/${filename}`;
+      fs.writeFileSync(localPath, buffer);
+
+      imageUrl = makePublicUrl(folder, fileName);
     }
 
     // ✅ Create Campaign

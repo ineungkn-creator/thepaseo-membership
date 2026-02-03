@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import fs from "fs/promises";
+import {
+  getUploadFolder,
+  getLocalPath,
+  ensureDir,
+  makePublicUrl,
+} from "@/lib/storage";
+import fs from "fs";
 import path from "path";
 
 const prisma = new PrismaClient();
@@ -32,21 +38,20 @@ export async function PATCH(
     const validShopIds = shopIds.filter((id) => id !== "redemption");
 
     // file handling
-    const file = formData.get("file") as File | null;
-    let imageUrl: string | undefined = undefined;
+    const file = formData.get("file") as File;
+    let imageUrl: string | null = null;
 
-    if (file && file.size > 0 && file.name) {
-      const uploadsDir = path.join(process.cwd(), "public/uploads/admin/reward");
-      await fs.mkdir(uploadsDir, { recursive: true });
+    if (file && file.size > 0) {
+      const folder = getUploadFolder("reward"); // อ่านจาก ENV
+      const filename = `${Date.now()}-${file.name}`;
 
-      const safeName = file.name.replace(/[^\w.\-_]/g, "_");
-      const filename = `${Date.now()}_${safeName}`;
-      const filePath = path.join(uploadsDir, filename);
+      const localPath = getLocalPath(folder, filename);
+      ensureDir(localPath);
 
       const buffer = Buffer.from(await file.arrayBuffer());
-      await fs.writeFile(filePath, buffer);
+      fs.writeFileSync(localPath, buffer);
 
-      imageUrl = `/uploads/admin/reward/${filename}`;
+      imageUrl = makePublicUrl(folder, filename);
     }
 
     const tagsRaw = formData.get("tags")?.toString() || "[]";
@@ -169,14 +174,11 @@ export async function GET(
   }
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
 
-    // 1️⃣ ตรวจสอบว่ามี reward อยู่ไหม
+    // 1️⃣ ตรวจสอบว่า reward มีจริงไหม
     const reward = await prisma.reward.findUnique({
       where: { id },
       include: {
@@ -189,47 +191,42 @@ export async function DELETE(
     });
 
     if (!reward) {
-      return NextResponse.json(
-        { error: "Reward not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Reward not found" }, { status: 404 });
     }
 
-    // 2️⃣ ลบ tagRelations ของ reward
+    // 2️⃣ ลบ tagRelations
     await prisma.tagRelation.deleteMany({
       where: { targetId: id, targetType: "reward" },
     });
 
-    // 3️⃣ ลบ RedeemHistory / Redemption / Participation (ตามจริงจาก schema)
-    await prisma.redeemHistory.deleteMany({
-      where: { rewardId: id },
-    });
+    // 3️⃣ ลบ relations อื่น ๆ
+    await prisma.redeemHistory.deleteMany({ where: { rewardId: id } });
+    await prisma.redemption.deleteMany({ where: { rewardId: id } });
+    await prisma.rewardParticipation.deleteMany({ where: { rewardId: id } });
 
-    await prisma.redemption.deleteMany({
-      where: { rewardId: id },
-    });
-
-    await prisma.rewardParticipation.deleteMany({
-      where: { rewardId: id },
-    });
-
-    // 4️⃣ ถอด relations shops & branches เพื่อป้องกัน foreign key error
+    // 4️⃣ เคลียร์ relations shops & branches
     await prisma.reward.update({
       where: { id },
-      data: {
-        shops: { set: [] },
-        branches: { set: [] },
-      },
+      data: { shops: { set: [] }, branches: { set: [] } },
     });
 
-    // 5️⃣ ลบไฟล์รูปภาพ ถ้ามี
+    // 5️⃣ ลบไฟล์รูป — ใช้ระบบ storage กลาง 💚
     if (reward.imageUrl) {
-      const filePath = path.join(process.cwd(), "public", reward.imageUrl);
       try {
-        await fs.unlink(filePath);
+        const folder = getUploadFolder("reward"); // ex. "/uploads/admin/reward"
+
+        // extract file name จาก URL
+        const fileName = reward.imageUrl.split("/").pop();
+
+        if (fileName) {
+          const localPath = getLocalPath(folder, fileName);
+
+          if (fs.existsSync(localPath)) {
+            fs.unlinkSync(localPath);
+          }
+        }
       } catch (err) {
-        // ถ้าไม่มีไฟล์ ก็ปล่อยผ่าน
-        console.warn("Failed to delete reward image:", filePath);
+        console.warn("⚠️ Failed to delete reward image:", err);
       }
     }
 
@@ -243,11 +240,6 @@ export async function DELETE(
 
   } catch (error: any) {
     console.error("❌ DELETE reward error:", error);
-    return NextResponse.json(
-      { error: error.message || "Server Error" },
-      { status: 500 }
-    );
-  } finally {
-    await prisma.$disconnect();
+    return NextResponse.json({ error: error.message || "Server Error" }, { status: 500 });
   }
 }

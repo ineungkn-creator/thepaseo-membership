@@ -135,10 +135,19 @@ export default function AdminCouponsPage() {
                   )}
                 </td>
                 <td className="p-2 border text-start whitespace-nowrap">
-                  ได้รับ: {c.pointCost ?? 0}<br />ใช้: {c.pointEarn ?? 0}
+                  ได้รับ: {c.pointEarn ?? 0}<br />ใช้: {c.pointCost ?? 0}
                 </td>
                 <td className="p-2 border text-center">
-                  {((c.quantity ?? 0) + (c.users?.length ?? 0)) || "-"}
+                  {c.users?.length ? (
+                    <button
+                      onClick={() => router.push(`/admin/coupons/${c.id}/users`)}
+                      className="text-paseo underline hover:text-paseo-dark"
+                    >
+                      {c.users.length}
+                    </button>
+                  ) : (
+                    0
+                  )}
                 </td>
                 <td className="p-2 border">
                   {new Date(c.startDate).toLocaleDateString()}

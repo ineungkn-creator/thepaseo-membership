@@ -29,8 +29,9 @@ interface UserForm {
   email: string;
   occupation: string;
   residenceType: string;
-  houseNumber: string;
-  alley: string;
+  address: string;
+  //houseNumber: string;
+  //alley: string;
   subDistrict: string;
   district: string;
   province: string;
@@ -67,8 +68,9 @@ export default function AddUserModal({
     email: initialData?.email || "",
     occupation: initialData?.occupation || "",
     residenceType: initialData?.residenceType || "",
-    houseNumber: initialData?.houseNumber || "",
-    alley: initialData?.alley || "",
+    address: initialData?.address || "",
+    //houseNumber: initialData?.houseNumber || "",
+    //alley: initialData?.alley || "",
     subDistrict: initialData?.subDistrict || "",
     district: initialData?.district || "",
     province: initialData?.province || "",
@@ -91,8 +93,9 @@ export default function AddUserModal({
         email: initialData.email || "",
         occupation: initialData.occupation || "",
         residenceType: initialData.residenceType || "",
-        houseNumber: initialData.houseNumber || "",
-        alley: initialData.alley || "",
+        address: initialData.address || "",
+        //houseNumber: initialData.houseNumber || "",
+        //alley: initialData.alley || "",
         subDistrict: initialData.subDistrict || "",
         district: initialData.district || "",
         province: initialData.province || "",
@@ -136,31 +139,67 @@ export default function AddUserModal({
 
   // OTP
   const handleSendOtp = async () => {
-    if (!/^0[689]\d{8}$/.test(form.phone)) return alert("กรุณากรอกเบอร์โทรให้ถูกต้อง");
-    const res = await fetch("/api/admin/users/send-otp", {
+    if (!/^0[689]\d{8}$/.test(form.phone)) {
+      alert("กรุณากรอกเบอร์โทรให้ถูกต้อง");
+      return;
+    }
+
+    const res = await fetch("/api/auth/send-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone: form.phone }),
+      body: JSON.stringify({
+        phone: form.phone,
+        purpose: "REGISTER",
+      }),
     });
+
     const data = await res.json();
-    if (!res.ok) return alert(data.error || "ส่ง OTP ไม่สำเร็จ");
+
+    if (!res.ok) {
+      alert(data.error || "ส่ง OTP ไม่สำเร็จ");
+      return;
+    }
+
     setShowOtpModal(true);
     setCountdown(60);
   };
 
+
   const handleVerifyOtp = async () => {
-    const res = await fetch("/api/admin/users/verify-otp", {
+    if (otp.length !== 6) {
+      alert("กรุณากรอก OTP 6 หลัก");
+      return;
+    }
+
+    const res = await fetch("/api/auth/verify-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone: form.phone, otp }),
+      body: JSON.stringify({
+        phone: form.phone,
+        otp,
+        purpose: "REGISTER",
+      }),
     });
+
     const data = await res.json();
-    if (!res.ok) return alert(data.error || "OTP ไม่ถูกต้อง");
+
+    if (!res.ok) {
+      alert(data.error || "OTP ไม่ถูกต้อง");
+      return;
+    }
+
     setIsOtpVerified(true);
     setShowOtpModal(false);
+    setOtp("");
   };
 
+
   const handleSubmit = async () => {
+    if (userType === "USER" && !isOtpVerified) {
+      alert("กรุณายืนยัน OTP ก่อนบันทึกข้อมูล");
+      return;
+    }
+
     try {
       const url =
         mode === "edit" ? `/api/admin/users?id=${initialData?.id}` : "/api/admin/users";
@@ -339,7 +378,15 @@ export default function AddUserModal({
                   </option>
                 ))}
               </select>
+
               <input
+                name="address"
+                placeholder="ที่อยู่"
+                value={form.address}
+                onChange={handleChange}
+                className="border rounded p-2"
+              />
+              {/* <input
                 name="houseNumber"
                 placeholder="บ้านเลขที่"
                 value={form.houseNumber}
@@ -352,7 +399,7 @@ export default function AddUserModal({
                 value={form.district}
                 onChange={handleChange}
                 className="border rounded p-2"
-              />
+              /> */}
               <input
                 name="province"
                 placeholder="จังหวัด"

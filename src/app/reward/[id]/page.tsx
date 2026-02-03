@@ -13,7 +13,7 @@ import BackButton from '@/components/BackButton/page';
 import ShareButton from '@/components/ShareButton/page';
 import Loading from '@/components/loading';
 import UserProfile from '@/components/UserProfile/page';
-
+import HeaderMobile from '@/components/HeaderMobile/page';
 import UseRewardModal from "@/components/reward/UseRewardModal";
 
 type Reward = {
@@ -23,17 +23,25 @@ type Reward = {
   terms?: string;
   imageUrl?: string;
   linkShare?: string;
+
   pointCost: number;
   pointEarn: number;
+
   quantity: number | null;
   maxPerUser: number | null;
+
   joinedCount: number;
   joinedCountByUser: number;
+
+  hasJoined: boolean;      // ✅ เคยแลกอย่างน้อย 1 ครั้ง
+  reachedLimit: boolean;  // ✅ ใช้สิทธิ์ครบ maxPerUser แล้วหรือยัง
+
   userPointBalance: number;
-  isJoined: boolean;
+
   isFull: boolean;
   isExpired: boolean;
-  canRedeem: boolean;
+  canRedeem: boolean;     // ✅ backend คำนวณให้แล้ว
+
   startDate: string;
   endDate: string;
   locationLabel: string;
@@ -96,12 +104,14 @@ const handleJoin = async () => {
   setError(null);
 
   try {
-    const res = await fetch(`/api/reward/${id}`, { method: "POST" });
+    const res = await fetch(`/api/reward/join`, {
+      method: "POST",
+    });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "ไม่สามารถแลกรางวัลได้");
 
     // ✅ เปิด modal เต็มหน้าจอพร้อมข้อมูลรางวัลที่เพิ่งแลก
-    setUserRewardId(data.userReward?.id);
+    setUserRewardId(data.participation?.id);
     setShowUseModal(true);
 
     await Promise.all([fetchReward(), fetchBalance()]);
@@ -124,7 +134,10 @@ const handleJoin = async () => {
   const now = new Date();
   const startDate = new Date(reward.startDate);
   const endDate = new Date(reward.endDate);
-  const canJoin = !reward.isJoined && now >= startDate && now <= endDate;
+  const canJoin =
+    reward.canRedeem &&
+    now >= startDate &&
+    now <= endDate;
 
   const monthNames = [
     "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
@@ -193,30 +206,45 @@ const handleJoin = async () => {
   // ✅ ปุ่มแลกรางวัล
   const renderButton = () => {
     if (reward.isExpired)
-      return <button disabled className="btn-disable">กิจกรรมสิ้นสุดแล้ว</button>;
+      return (
+        <button disabled className="btn-disable">
+          กิจกรรมสิ้นสุดแล้ว
+        </button>
+      );
+
     if (reward.isFull)
-      return <button disabled className="btn-disable">ของรางวัลหมดแล้ว</button>;
+      return (
+        <button disabled className="btn-disable">
+          ของรางวัลหมดแล้ว
+        </button>
+      );
+
+    if (reward.reachedLimit)
+      return (
+        <button disabled className="btn-disable">
+          คุณแลกครบแล้ว ({reward.joinedCountByUser}/{reward.maxPerUser})
+        </button>
+      );
+
     if (reward.pointCost > pointBalance)
       return (
         <button disabled className="btn-disable">
           แต้มไม่เพียงพอ (มี {pointBalance} / ต้องใช้ {reward.pointCost})
         </button>
       );
-    if (reward.maxPerUser && reward.joinedCountByUser >= reward.maxPerUser)
-      return <button disabled className="btn-disable">คุณแลกครบแล้ว ({reward.joinedCountByUser}/{reward.maxPerUser})</button>;
 
-  
     return (
       <button
         onClick={() => setShowConfirmModal(true)}
         disabled={joining}
         className="btn-main"
       >
-        <span className="text-base block text-white">
-          {joining ? "กำลังแลกรางวัล..." : "แลกรางวัลนี้"}  
+        <span className="text-base block text-white leading-none">
+          {joining ? "กำลังแลกรางวัล..." : "แลกรางวัลนี้"}
         </span>
+
         {reward.maxPerUser && (
-          <span className="text-xs block text-white">
+          <span className="text-xs block text-white leading-none">
             แลกแล้ว {reward.joinedCountByUser} / {reward.maxPerUser} ครั้ง
           </span>
         )}
@@ -225,114 +253,108 @@ const handleJoin = async () => {
   };
 
   return (
-    <div>
-      {/* ✅ ส่วนหัว */}
-      <div className="relative overflow-hidden py-2 md:hidden">
-        <div className="absolute top-4 left-4">
-          <BackButton className="mb-4" />
+      <div>
+        <HeaderMobile />
+      
+        <div className="max-w-2xl mx-auto -mb-14 md:mt-20 md:-mb-16 pt-16  rounded-xl">
+          <div className="w-full px-10 md:pt-0 md:px-20 md:pb-0">
+            <UserProfile  />
+          </div>
         </div>
-        <div className="flex flex-row justify-center gap-2">
-          <Image src="/logo.png" alt="Thepaseo" width={50} height={50} />
-        </div>
-      </div>
-
-      {/* ✅ User Profile */}
-      <div className="max-w-2xl mx-auto p-0 -mb-14 md:mt-20 md:-mb-16 rounded-xl">
-        <div className="w-full pt-4 px-10 md:pt-0 md:px-20 md:pb-0">
-          <UserProfile />
-        </div>
-      </div>
-
-      {/* ✅ เนื้อหา reward */}
-      <div ref={captureRef} className="capture relative max-w-2xl mx-auto p-0 pt-20 bg-gray-100 rounded-5xl">
-        <div className="p-4 md:p-10">
+        <div
+          ref={captureRef}
+          className="capture relative max-w-2xl mx-auto md:pt-10 md:pb-0 pb-14 md:mb-10 pt-20 bg-gray-100 rounded-t-5xl rounded-b-xl flex flex-col md:gap-6 gap-4"
+        >
+  
+          <div className="px-4 md:px-10">
           {reward.imageUrl && (
             <Image
               width={600}
               height={600}
               src={reward.imageUrl}
               alt={reward.name}
-              className="w-full h-full object-cover rounded-xl shadow-md" />
+              className="w-full h-full object-cover rounded-2xl shadow border border-gray-100"
+            />
           )}
         </div>
 
         {/* ✅ รายละเอียด */}
-        <div className="p-4 px-4 pt-0 md:p-10 md:pt-0">
-                  <div className="flex flex-row justify-between align-start gap-4 bg-white p-6 rounded-lg">
-                    <div className="flex flex-col gap-3">
-                      <h1 className="text-lg font-bold">{reward.name}</h1>
-                      <div className="flex flex-row item-center align-center gap-4">
-                        <FaRegCalendarCheck className="text-2xl" />
-                        <p className="text-base text-gray-500">
-                          ตั้งแต่ {start_day} - {end_day} {end_month_long} {end_year} นี้
-                        </p>
-                      </div>
-                      {reward.pointCost > 0 && 
-                      <div className="flex flex-row item-center align-center gap-4">
-                        <CiBitcoin className="text-2xl" />
-                        <p className="text-base text-gray-600">ค่าใช้จ่าย: {reward.pointCost} พอยต์</p>
-                      </div>
-                      }
-                      {reward.pointEarn > 0 && 
-                      <div className="flex flex-row item-center align-center gap-4">
-                        <CiBitcoin className="text-2xl" />
-                        <p className="text-base text-gray-600">ผู้เข้าร่วมจะได้รับ: {reward.pointEarn} พอยต์</p>
-                      </div>
-                      }
-        
-                      <div className="flex flex-row item-center align-center gap-4">
-                        <CiBitcoin className="text-2xl" />
-                        <p className="text-base text-gray-600">
-                          แต้มของคุณ: <span className="font-semibold text-green-600">{pointBalance}</span> พอยต์
-                        </p>
-                      </div>
-        
-                      {reward.joinedCount > 0 && 
-                      <div className="flex flex-row item-center align-center gap-4">
-                        <FaCalendarCheck className="text-2xl" />
-                        <p className="text-base text-gray-600">ผู้เข้าร่วม: {reward.joinedCount} คน</p>
-                      </div>
-                      }
-                    </div>
-                    <div className="flex flex-col items-center gap-4">
-                      {session?.user?.id && (
-                        <FavoriteButton
-                          targetId={reward.id}
-                          targetType="REWARD"
-                          userId={session.user.id}
-                        />
-                      )}
-                      <button
-                        onClick={handleCapture}
-                      >
-                        <PiDotsThreeOutlineLight className="text-2xl" />
-                      </button>
-                      <ShareButton
-                        title={reward?.name || "Event"}
-                        linkShare={reward?.linkShare}
-                      />
-                    </div>
-        
-                  </div>
-                  
-                </div>
+         <div className="px-4 md:px-10">
+            <div className="flex flex-row justify-between align-start gap-4 bg-white md:p-6 p-4 rounded-2xl shadow border border-gray-100">
+            <div className="flex flex-col gap-3">
+              <h1 className="text-sm font-bold">{reward.name}</h1>
+              <div className="flex flex-row item-center align-center gap-4">
+                <FaRegCalendarCheck size={24} />
+                <p className="text-sm text-gray-500">
+                  ตั้งแต่ {start_day} - {end_day} {end_month_long} {end_year} นี้
+                </p>
+              </div>
+              {reward.pointCost > 0 && 
+              <div className="flex flex-row item-center align-center gap-4">
+                <CiBitcoin size={24} />
+                <p className="text-sm text-gray-600">ค่าใช้จ่าย: {reward.pointCost} พอยต์</p>
+              </div>
+              }
+              {reward.pointEarn > 0 && 
+              <div className="flex flex-row item-center align-center gap-4">
+                <CiBitcoin size={24} />
+                <p className="text-sm text-gray-600">ผู้เข้าร่วมจะได้รับ: {reward.pointEarn} พอยต์</p>
+              </div>
+              }
 
-                <div className="p-4 px-4 pt-0 md:p-10 md:pt-0">
-          <div className="flex flex-col justify-between align-start gap-4 bg-white p-6 rounded-lg">
+              <div className="flex flex-row item-center align-center gap-4">
+                <CiBitcoin size={24} />
+                <p className="text-sm text-gray-600">
+                  แต้มของคุณ: <span className="font-semibold text-green-600">{pointBalance}</span> พอยต์
+                </p>
+              </div>
+
+              {reward.joinedCount > 0 && 
+              <div className="flex flex-row item-center align-center gap-4">
+                <FaCalendarCheck size={24} />
+                <p className="text-sm text-gray-600">ผู้เข้าร่วม: {reward.joinedCount} คน</p>
+              </div>
+              }
+            </div>
+            <div className="flex flex-col items-center gap-4">
+              {session?.user?.id && (
+                <FavoriteButton
+                  targetId={reward.id}
+                  targetType="REWARD"
+                  userId={session.user.id}
+                />
+              )}
+              <button
+                onClick={handleCapture}
+              >
+                <PiDotsThreeOutlineLight size={24} />
+              </button>
+              <ShareButton
+                title={reward?.name || "Event"}
+                linkShare={reward?.linkShare}
+              />
+            </div>
+
+          </div>
+          
+        </div>
+
+        <div className="px-4 md:px-10">
+          <div className="flex flex-col justify-between align-start gap-4 bg-white md:p-6 p-4 rounded-2xl shadow border border-gray-100">
           {reward.description && 
             <div>
-              <h3 className="text-lg font-bold mb-4">รายละเอียด</h3>
+              <h3 className="text-sm font-bold mb-4">รายละเอียด</h3>
               <div
-                className="prose text-base mb-2 prose-ol:list-decimal prose-ol:pl-6 prose-ul:list-disc prose-ul:pl-6"
+                className="prose text-sm mb-2 prose-ol:list-decimal prose-ol:pl-6 prose-ul:list-disc prose-ul:pl-6"
                 dangerouslySetInnerHTML={{ __html: reward.description }}
               />
             </div>
           }
           {reward.terms && 
             <div>
-              <h3 className="text-lg font-bold mb-4">เงื่อนไขกิจกรรม</h3>
+              <h3 className="text-sm font-bold mb-4">เงื่อนไขกิจกรรม</h3>
               <div
-                className="prose text-base mb-2 prose-ol:list-decimal prose-ol:pl-6 prose-ul:list-disc prose-ul:pl-6"
+                className="prose text-sm mb-2 prose-ol:list-decimal prose-ol:pl-6 prose-ul:list-disc prose-ul:pl-6"
                 dangerouslySetInnerHTML={{ __html: reward.terms }}
               />
             </div>
@@ -340,8 +362,8 @@ const handleJoin = async () => {
 
           {reward.locationLabel && 
             <div>
-              <h3 className="text-lg font-bold mb-4">จุดแลกรับของราลวัล</h3>
-            <p className="text-gray-700">{reward.locationLabel}</p>
+              <h3 className="text-sm font-bold mb-4">จุดแลกรับของราลวัล</h3>
+            <p className="textsm text-gray-700">{reward.locationLabel}</p>
             </div>
           }
           </div>
@@ -349,7 +371,7 @@ const handleJoin = async () => {
         </div>
 
         {/* ✅ ปุ่มแลกรางวัล */}
-        <div className="max-w-2xl mx-auto bg-white w-full p-4 pb-20 md:p-4 text-black rounded-t-2xl shadow-sm border border-gray-200">
+        <div className="max-w-2xl mx-auto bg-white w-full p-4 pb-4 md:p-4 md:rounded-2xl rounded-t-2xl shadow-sm border border-gray-200">
           {renderButton()}
         </div>
 
@@ -361,7 +383,7 @@ const handleJoin = async () => {
         >
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="bg-white p-6 rounded-xl shadow-md max-w-sm w-full text-center">
-              <h2 className="text-lg font-semibold mb-2">ยืนยันการแลก</h2>
+              <h2 className="text-sm font-semibold mb-2">ยืนยันการแลก</h2>
               <p className="text-gray-700 mb-4">
                 คุณต้องการแลกรางวัลนี้โดยใช้ {reward.pointCost} พอยต์หรือไม่?
               </p>

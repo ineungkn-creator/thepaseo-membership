@@ -61,22 +61,34 @@ useEffect(() => {
   // ฟังก์ชันเดิมสำหรับส่ง OTP
   const handleRequestOtp = async () => {
     if (countdown > 0) return
-    setOtpError('')
+
+    setOtpError("")
     setOtpSent(false)
 
-    const res = await fetch('/api/auth/send-otp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone }),
+    const res = await fetch("/api/auth/send-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        phone,
+        purpose: "VERIFY_PHONE",
+      }),
     })
 
-    if (res.ok) {
-      setOtpSent(true)
-      setCountdown(60)
-    } else {
-      const data = await res.json()
-      setOtpError(data.error || 'ไม่สามารถส่ง OTP ได้')
+    if (!res.ok) {
+      let errorMessage = "ไม่สามารถส่ง OTP ได้"
+
+      try {
+        const data = await res.json()
+        errorMessage = data?.error || errorMessage
+      } catch {}
+
+      setOtpError(errorMessage)
+      return
     }
+
+    // ✅ สำเร็จ
+    setOtpSent(true)
+    setCountdown(60)
   }
 
   // ฟังก์ชันใหม่สำหรับ Step 2 (ตรวจสอบเบอร์/รหัสผ่าน)
@@ -94,9 +106,35 @@ useEffect(() => {
     e.preventDefault()
     setOtpError('')
 
-    const res = await signIn('credentials', {
+    const res = await fetch("/api/auth/verify-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        phone,
+        otp,
+        purpose: "VERIFY_PHONE",
+      }),
+    })
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      let errorMessage = "ไม่สามารถส่ง OTP ได้"
+
+      try {
+        const data = await res.json()
+        errorMessage = data?.error || errorMessage
+      } catch (e) {
+        // response ไม่มี body → ใช้ default
+      }
+
+      setOtpError(errorMessage)
+      return
+    }
+
+    // ✅ OTP ผ่าน → login จริง
+    await signIn("credentials", {
       phone,
-      otp,
       redirect: false,
     })
 
@@ -132,7 +170,7 @@ useEffect(() => {
   return (
     <div className="max-w-lg mx-auto p-0 mb-20 md:mb-0 mb-0 rounded-xl relative overflow-hidden">
         <HeaderMobile showBack={false} showFavorite={false} />
-        <div className="mb-0 py-4 px-4 md:px-4">
+        <div className="md:pt-4 pt-16 mb-0 py-4 px-4 md:px-4">
           <BannerLogin />
         </div>
         

@@ -12,8 +12,9 @@ declare module "next-auth" {
       role: "USER" | "ADMIN" | "ADMINMARKETING" | "CRMMANAGEMENT" | "STAFF";
       firstName?: string | null
       lastName?: string | null
-      houseNumber?: string | null
-      alley?: string | null
+      address?: string | null
+      //houseNumber?: string | null
+      //alley?: string | null
       subDistrict?: string | null
       district?: string | null
       postalCode?: string | null
@@ -62,8 +63,9 @@ declare module "next-auth" {
     role: "USER" | "ADMIN" | "ADMINMARKETING" | "CRMMANAGEMENT" | "STAFF";
     firstName?: string | null
     lastName?: string | null
-    houseNumber?: string | null
-    alley?: string | null
+    address?: string | null
+    //houseNumber?: string | null
+    //alley?: string | null
     subDistrict?: string | null
     district?: string | null
     postalCode?: string | null

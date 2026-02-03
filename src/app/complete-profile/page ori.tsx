@@ -36,8 +36,9 @@ type FormState = {
   email: string;
   occupation: string;
   residenceType: string;
-  houseNumber: string;
-  alley: string;
+  address: string;
+  //houseNumber: string;
+  //alley: string;
   subDistrict: string;
   district: string;
   province: string;
@@ -59,8 +60,9 @@ export default function CompleteProfilePage() {
     gender: "",
     phone: "",
     email: "",
-    houseNumber: "",
-    alley: "",
+    address: "",
+    //houseNumber: "",
+    //alley: "",
     subDistrict: "",
     district: "",
     province: "",
@@ -113,8 +115,9 @@ export default function CompleteProfilePage() {
           gender: data.user.gender || prev.gender,
           phone: data.user.phone || prev.phone,
           email: data.user.email || prev.email,
-          houseNumber: data.user.houseNumber || prev.houseNumber,
-          alley: data.user.alley || prev.alley,
+          address: data.user.address || prev.address,
+          //houseNumber: data.user.houseNumber || prev.houseNumber,
+          //alley: data.user.alley || prev.alley,
           subDistrict: data.user.subDistrict || prev.subDistrict,
           district: data.user.district || prev.district,
           province: data.user.province || prev.province,
@@ -583,8 +586,9 @@ export default function CompleteProfilePage() {
                 </SelectContent>
             </Select>
             
-            <Input type="text" placeholder="บ้านเลขที่ *" name="houseNumber" className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo" onChange={handleChange} value={form.houseNumber} />
-            <Input type="text" placeholder="ซอย *" name="alley" className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo" onChange={handleChange} value={form.alley} />
+            <Input type="text" placeholder="ที่อยู่ *" name="address" className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo" onChange={handleChange} value={form.address} />
+            {/* <Input type="text" placeholder="บ้านเลขที่ *" name="houseNumber" className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo" onChange={handleChange} value={form.houseNumber} />
+            <Input type="text" placeholder="ซอย *" name="alley" className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo" onChange={handleChange} value={form.alley} /> */}
             <Input type="text" placeholder="แขวง *" name="subDistrict" className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo" onChange={handleChange} value={form.subDistrict} />
             <Input type="text" placeholder="เขต *" name="district" className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo" onChange={handleChange} value={form.district} />
             <Input type="text" placeholder="จังหวัด *" name="province" className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-xl bg-gray-100 focus:outline-none focus:ring focus:ring-paseo" onChange={handleChange} value={form.province} />

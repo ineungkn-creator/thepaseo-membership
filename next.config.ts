@@ -1,14 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // บังคับปิด turbopack build engine
+  // ปิด turbopack — บังคับใช้ Webpack
   experimental: {
-    turbo: {
-      resolveAlias: {},
-      rules: {},
-    },
+    turbo: false,
   },
 
-  // อาจต้องใส่
   distDir: ".next",
 
   images: {
@@ -17,14 +13,17 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "thepaseo.co.th",
+        hostname: "profile.line-scdn.net",
       },
       {
         protocol: "https",
-        hostname: "profile.line-scdn.net",
+        hostname: "member.thepaseo.co.th",
+        port: "",
+        pathname: "/**",
       },
     ],
   },
 };
 
 module.exports = nextConfig;
+
