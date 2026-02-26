@@ -209,9 +209,12 @@ export async function PATCH(req: Request) {
       district,
       province,
       postalCode,
-      branchId,
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
     };
+
+    if (branchId) {
+        updateData.branchId = branchId;
+    }
 
     if (password) {
       updateData.password = await bcrypt.hash(password, 10);

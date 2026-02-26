@@ -17,7 +17,7 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
     // ✅ ป้องกันส่งค่าที่ Prisma ไม่รองรับ
     const data = {
       name: body.name,
-      type: body.type,
+      slug: body.slug,
       location: body.location,
       imageUrl: body.imageUrl,
       isActive: body.isActive ?? true,

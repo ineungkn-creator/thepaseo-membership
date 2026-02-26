@@ -8,6 +8,12 @@ import {
 } from "@/lib/storage";
 import fs from "fs";
 import path from "path";
+import { getServerSession } from "next-auth";
+import { authConfig } from "@/lib/auth.config";
+import {
+  hasPermission,
+  PERMISSIONS,
+} from "@/lib/auth/permissions";
 
 const prisma = new PrismaClient();
 
@@ -55,6 +61,14 @@ export async function GET(req: NextRequest) {
 // ✅ POST: สร้าง campaign ใหม่ (ไม่มีการสร้าง coupon แล้ว)
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession(authConfig);
+
+    if (!session) return new Response("Unauthorized", { status: 401 });
+
+    if (!hasPermission(session.user.role, PERMISSIONS.CAMPAIGN_CREATE)) {
+      return new Response("Forbidden", { status: 403 });
+    }
+
     const formData = await req.formData();
 
     const name = formData.get("name")?.toString() || "";

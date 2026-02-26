@@ -59,6 +59,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     categoryId,
     branchId,
     tags, // ⭐ รับ tagIds ตรงนี้
+    customRate,
   } = body;
 
   // 1) update shop info
@@ -73,6 +74,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       location,
       categoryId,
       branchId,
+      customRate:
+        customRate === '' || customRate === undefined
+          ? null
+          : Number(customRate),
     },
   });
 

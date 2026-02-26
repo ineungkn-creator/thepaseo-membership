@@ -199,10 +199,19 @@ export default function AdminAddReceiptPage() {
       if (!settingRes.ok) throw new Error("โหลดการตั้งค่าพอยต์ไม่สำเร็จ");
       const setting = await settingRes.json();
 
-      // ✅ คำนวณพอยต์ที่จะได้รับ
-      const rateAmount = setting.receiptRateAmount || 1;
-      const ratePoints = setting.receiptRatePoints || 0;
-      const pointsToAdd = Math.floor(amountValue / rateAmount) * ratePoints;
+      // ✅ คำนวณพอยท์ตาม rate
+      const calcRes = await fetch("/api/admin/points/calculate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: amountValue,
+            shopId,
+          }),
+        });
+
+        if (!calcRes.ok) throw new Error("คำนวณพอยท์ไม่สำเร็จ");
+
+        const { points: pointsToAdd } = await calcRes.json();
 
       // ✅ แสดงกล่องยืนยัน
       const confirmMsg = `

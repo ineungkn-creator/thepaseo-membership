@@ -118,6 +118,7 @@ export async function POST(request: Request) {
       categoryId,
       branchId,
       tags = [], // ⭐ รับ tagIds ตรงนี้
+      customRate,
     } = body;
 
     // 1) create shop
@@ -131,6 +132,10 @@ export async function POST(request: Request) {
         location: location || null,
         categoryId: categoryId || null,
         branchId: branchId || null,
+        customRate:
+          customRate === '' || customRate === undefined
+            ? null
+            : Number(customRate),
       },
     });
 

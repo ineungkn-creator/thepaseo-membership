@@ -9,6 +9,12 @@ import {
 } from "@/lib/storage";
 import fs from "fs";
 import path from "path";
+import { getServerSession } from "next-auth";
+import { authConfig } from "@/lib/auth.config";
+import {
+  hasPermission,
+  PERMISSIONS,
+} from "@/lib/auth/permissions";
 
 const prisma = new PrismaClient();
 
@@ -43,6 +49,18 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
 
 export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
+    const session = await getServerSession(authConfig);
+
+    if (!session) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    const role = session.user.role;
+
+    if (!hasPermission(role, PERMISSIONS.CAMPAIGN_EDIT)) {
+      return new Response("Forbidden", { status: 403 });
+    }
+
     const { id } = await context.params;
     const formData = await req.formData();
 
@@ -110,6 +128,18 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
 export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
+
+    const session = await getServerSession(authConfig);
+
+    if (!session) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    const role = session.user.role;
+
+    if (!hasPermission(role, PERMISSIONS.CAMPAIGN_DELETE)) {
+      return new Response("Forbidden", { status: 403 });
+    }
 
     // ดึงข้อมูล campaign ก่อน
     const campaign = await prisma.campaign.findUnique({

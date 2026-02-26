@@ -29,11 +29,11 @@ model User_Lost {
 model ShopCategory {
   id        String   @id @default(uuid())
   name      String
-  sortOrder Int      @default(0)
   slug      String   @unique
   imageUrl  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  sortOrder Int      @default(0)
   shops     Shop[]
 }
 
@@ -47,6 +47,7 @@ model Shop {
   location    String?
   categoryId  String?
   branchId    String?
+  customRate  Int?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   receipts    Receipt[]     @relation("ShopReceipts")
@@ -64,7 +65,7 @@ model Shop {
 model Branch {
   id        String     @id @default(uuid())
   name      String
-  type      BranchType
+  slug      String?
   location  String?
   isActive  Boolean    @default(true)
   createdAt DateTime   @default(now())
@@ -729,12 +730,6 @@ enum OtpLogStatus {
   SUCCESS
   BLOCKED
   FAILED
-}
-
-enum BranchType {
-  MALL
-  PARK
-  TOWN
 }
 
 enum OtpPurpose {

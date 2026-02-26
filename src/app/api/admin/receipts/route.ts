@@ -63,9 +63,17 @@ export async function PATCH(req: Request) {
         return NextResponse.json({ error: "Point setting not found" }, { status: 500 });
       }
 
+      const shop = await prisma.shop.findUnique({
+        where: { id: receipt.shopId! },
+      });
+
+      const rateAmount =
+        shop?.customRate ?? setting.receiptRateAmount;
+
+      const ratePoints = setting.receiptRatePoints || 1;
+
       const pointsToAdd =
-        Math.floor(receipt.amount / setting.receiptRateAmount) *
-        setting.receiptRatePoints;
+        Math.floor(receipt.amount / rateAmount) * ratePoints;
 
       // ⭐ คำนวณวันหมดอายุ
       let expiresAt: Date | null = null;
@@ -223,8 +231,17 @@ export async function POST(req: Request) {
       );
     }
 
+    const shop = await prisma.shop.findUnique({
+      where: { id: shopId },
+    });
+
+    const rateAmount =
+      shop?.customRate ?? setting.receiptRateAmount;
+
+    const ratePoints = setting.receiptRatePoints || 1;
+
     const pointsToAdd =
-      Math.floor(receipt.amount / setting.receiptRateAmount) * setting.receiptRatePoints;
+      Math.floor(receipt.amount / rateAmount) * ratePoints;
 
     let pointBalance = await prisma.pointBalance.findUnique({ where: { userId } });
     if (!pointBalance) {

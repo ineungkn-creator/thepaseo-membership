@@ -50,8 +50,15 @@ export default function PrivilegeCampaignList() {
         const res = await fetch("/api/shop/branch");
         if (!res.ok) throw new Error("Failed to fetch branches");
         const data = await res.json();
+
+        // ❌ กรองสาขาที่ชื่อ "บางนา" ออก
+        const filteredBranches = data.filter(
+          (branch: Branch) => branch.name !== "บางนา"
+        );
+
         // เพิ่ม “ทั้งหมด” ไว้ด้านหน้า
-        setBranches([{ id: "all", name: "ทั้งหมด" }, ...data]);
+        setBranches([{ id: "all", name: "ทั้งหมด" }, ...filteredBranches]);
+
       } catch (err: any) {
         setError("ไม่สามารถโหลดข้อมูลสาขาได้");
       }

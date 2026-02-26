@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { hasPermission, PERMISSIONS } from "@/lib/auth/permissions";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 
 import { IoIosAddCircle } from "react-icons/io";
+
 
 type Coupon = {
   id: string;
@@ -36,6 +39,15 @@ export default function AdminCouponsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const router = useRouter();
+
+  const { data: session } = useSession();
+  const role = session?.user?.role;
+
+  const canEdit =
+    role && hasPermission(role, PERMISSIONS.COUPONS_EDIT);
+
+  const canDelete =
+    role && hasPermission(role, PERMISSIONS.COUPONS_DELETE);
 
   const fetchCoupons = async (page: number) => {
     try {
@@ -161,18 +173,23 @@ export default function AdminCouponsPage() {
                 <td className="p-2 border text-center">{c.users?.length || 0}</td>
                 <td className="p-2 border text-center">{c.quantity ?? "-"}</td>
                 <td className="p-2 flex gap-2 justify-center">
-                  <button
+                  {canEdit && (
+                    <button
                     onClick={() => router.push(`/admin/coupons/${c.id}/edit`)}
                     className="px-3 py-1 rounded-lg text-white bg-paseo"
                   >
                     แก้ไข
                   </button>
-                  <button
+                  )}
+
+                  {canDelete && (
+                    <button
                     onClick={() => deleteCoupon(c.id)}
                     className="px-3 py-1 rounded-lg text-white bg-red-500"
                   >
                     ลบ
                   </button>
+                  )}
                 </td>
               </tr>
             ))}

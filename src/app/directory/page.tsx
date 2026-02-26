@@ -86,12 +86,16 @@ export default function DirectoryPage() {
           throw new Error('Failed to fetch branches or categories');
         }
         const branchesData = await branchRes.json();
+
+        const filteredBranches = branchesData.filter(
+          (branch: Branch) => branch.name !== "บางนา"
+        );
         const categoriesData = await categoryRes.json();
         // Filter categories with shops
         const filteredCategories = categoriesData.filter(
           (category: Category) => (category._count?.shops ?? 0) > 0
         );
-        setBranches(branchesData);
+        setBranches(filteredBranches);
         setCategories(filteredCategories);
       } catch (err: any) {
         setError('Failed to load branches or categories');

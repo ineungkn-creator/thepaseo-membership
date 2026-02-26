@@ -21,7 +21,75 @@ import { FaListCheck } from "react-icons/fa6";
 import { TbPresentationAnalytics } from "react-icons/tb";
 import { FaHashtag } from "react-icons/fa";
 
-export type Role = "USER" | "ADMIN" | "ADMINMARKETING" | "CRMMANAGEMENT" | "STAFF";
+import { Role } from "@prisma/client";
+
+export const PERMISSIONS = {
+  CAMPAIGN_VIEW: "campaign.view",
+  CAMPAIGN_CREATE: "campaign.create",
+  CAMPAIGN_EDIT: "campaign.edit",
+  CAMPAIGN_DELETE: "campaign.delete",
+
+  REWARD_VIEW: "reward.view",
+  REWARD_CREATE: "reward.create",
+  REWARD_EDIT: "reward.edit",
+  REWARD_DELETE: "reward.delete",
+
+  EVENT_VIEW: "event.view",
+  EVENT_CREATE: "event.create",
+  EVENT_EDIT: "event.edit",
+  EVENT_DELETE: "event.delete",
+
+  COUPONS_VIEW: "coupons.view",
+  COUPONS_CREATE: "coupons.create",
+  COUPONS_EDIT: "coupons.edit",
+  COUPONS_DELETE: "coupons.delete",
+
+  USER_VIEW: "user.view",
+  USER_EDIT: "user.edit",
+  USER_DELETE: "user.delete",
+
+  SETTINGS_EDIT: "settings.edit",
+} as const;
+
+export type Permission =
+  (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
+
+export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
+  ADMIN: Object.values(PERMISSIONS),
+
+  ADMINMARKETING: [
+    PERMISSIONS.CAMPAIGN_VIEW,
+    PERMISSIONS.CAMPAIGN_CREATE,
+    PERMISSIONS.CAMPAIGN_EDIT,
+    PERMISSIONS.REWARD_VIEW,
+    PERMISSIONS.USER_VIEW,
+  ],
+
+  CRMMANAGEMENT: [
+    PERMISSIONS.CAMPAIGN_VIEW,
+    PERMISSIONS.CAMPAIGN_EDIT,
+    PERMISSIONS.REWARD_VIEW,
+    PERMISSIONS.REWARD_EDIT,
+    PERMISSIONS.USER_VIEW,
+  ],
+
+  STAFF: [
+    PERMISSIONS.CAMPAIGN_VIEW,
+    PERMISSIONS.EVENT_VIEW,
+    PERMISSIONS.COUPONS_VIEW,
+    PERMISSIONS.REWARD_VIEW,
+    PERMISSIONS.USER_VIEW,
+  ],
+
+  USER: [],
+};
+
+export function hasPermission(
+  role: Role,
+  permission: Permission
+) {
+  return ROLE_PERMISSIONS[role]?.includes(permission);
+}
 
 export type MenuItem = {
   name: string;

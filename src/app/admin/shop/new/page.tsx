@@ -24,6 +24,7 @@ export default function NewShopPage() {
     location: "",
     categoryId: "",
     branchId: "",
+    customRate: "",
   });
 
   // ⭐ Tag state
@@ -210,6 +211,16 @@ export default function NewShopPage() {
 
             {/* ⭐ Tag Selector */}
             <TagSelector value={tags} onChange={setTags} />
+
+            {/* Rate */}
+            <div>
+              <label className="block text-sm font-medium text-gray-900">Rate Point</label>
+              <input
+                className="w-full border p-2 rounded-lg"
+                value={form.customRate}
+                onChange={(e) => setForm({ ...form, customRate: e.target.value })}
+              />
+            </div>
 
             <button
               type="submit"

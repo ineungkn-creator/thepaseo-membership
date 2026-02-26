@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { hasPermission, PERMISSIONS } from "@/lib/auth/permissions";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -12,6 +14,7 @@ import { CiBitcoin } from "react-icons/ci";
 import { FaStar } from "react-icons/fa";
 
 import { IoIosAddCircle } from "react-icons/io";
+
 
 // สร้าง type สำหรับ Event
 type EventData = {
@@ -40,6 +43,14 @@ export default function AdminEventList() {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedEvent, setSelectedEvent] = useState<EventData | null>(null);
   const router = useRouter();
+  const { data: session } = useSession();
+  const role = session?.user?.role;
+
+  const canEdit =
+    role && hasPermission(role, PERMISSIONS.EVENT_EDIT);
+
+  const canDelete =
+    role && hasPermission(role, PERMISSIONS.EVENT_DELETE);
 
   const fetchEvents = async (page: number) => {
     try {
@@ -136,16 +147,21 @@ export default function AdminEventList() {
                   </td>
                   <td className="p-2 border text-center">{r.redemptions?.length || 0}</td>
                   <td className="p-2 border">{new Date(r.createdAt).toLocaleDateString()}</td>
-                  <td className="p-2 flex gap-2">
-                    <button
-                      onClick={() => router.push(`/admin/event/${r.id}/edit`)}
-                      className="text-white px-3 py-1 rounded-lg bg-paseo"
-                    >
-                      แก้ไข
-                    </button>
-                    <button onClick={() => deleteEvent(r.id)} className="text-white px-3 py-1 rounded-lg bg-red-500">
-                      ลบ
-                    </button>
+                  <td className="p-2 flex gap-2 justify-center">
+                    {canEdit && (
+                      <button
+                        onClick={() => router.push(`/admin/event/${r.id}/edit`)}
+                        className="text-white px-3 py-1 rounded-lg bg-paseo"
+                      >
+                        แก้ไข
+                      </button>
+                    )}
+
+                    {canDelete && (
+                      <button onClick={() => deleteEvent(r.id)} className="text-white px-3 py-1 rounded-lg bg-red-500">
+                        ลบ
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

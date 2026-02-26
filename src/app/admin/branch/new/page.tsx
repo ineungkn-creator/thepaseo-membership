@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 export default function NewBranchPage() {
   const router = useRouter();
   const [name, setName] = useState("");
-  const [type, setType] = useState("MALL");
+  const [slug, setSlug] = useState("");
   const [location, setLocation] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -20,7 +20,7 @@ export default function NewBranchPage() {
     setUploading(true);
     const formData = new FormData();
     formData.append("file", file);
-    const res = await fetch("/api/admin/shop/uploadbranch", { method: "POST", body: formData });
+    const res = await fetch("/api/admin/shop/upload", { method: "POST", body: formData });
     const data = await res.json();
     setImageUrl(data.path);
     setUploading(false);
@@ -30,7 +30,7 @@ export default function NewBranchPage() {
     const res = await fetch("/api/admin/branch", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, type, location, imageUrl }),
+      body: JSON.stringify({ name, slug, location, imageUrl }),
     });
     if (res.ok) router.push("/admin/branch");
     else alert("ไม่สามารถบันทึกได้");
@@ -47,16 +47,8 @@ export default function NewBranchPage() {
         </div>
 
         <div>
-          <label>ประเภท</label>
-          <select
-            className="w-full border rounded px-3 py-2"
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-          >
-            <option value="MALL">MALL</option>
-            <option value="PARK">PARK</option>
-            <option value="TOWN">TOWN</option>
-          </select>
+          <label>Slug</label>
+          <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="ชื่อภาษาอังกฤษ" />
         </div>
 
         <div>

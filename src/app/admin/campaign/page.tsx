@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { hasPermission, PERMISSIONS } from "@/lib/auth/permissions";
 import Link from "next/link";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +59,15 @@ export default function AdminCampaignPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | CampaignData | null>(null);
   const router = useRouter();
+
+  const { data: session } = useSession();
+  const role = session?.user?.role;
+
+  const canEdit =
+    role && hasPermission(role, PERMISSIONS.CAMPAIGN_EDIT);
+
+  const canDelete =
+    role && hasPermission(role, PERMISSIONS.CAMPAIGN_DELETE);
   
   const fetchCampaigns = async (page: number) => {
     try {
@@ -135,16 +146,24 @@ export default function AdminCampaignPage() {
                 {/* <td className="p-2 border cursor-pointer text-center text-text-active"
                   onClick={() => router.push(`/admin/campaign/${c.id}/participants`)}
                 >{c._count.participations}</td> */}
-                <td className="p-2 flex gap-2">
-                  <button
-                    onClick={() => router.push(`/admin/campaign/${c.id}/edit`)}
-                    className="text-white px-3 py-1 rounded-lg bg-paseo"
-                  >
-                    แก้ไข
-                  </button>
-                  <button onClick={() => deleteCampaign(c.id)} className="text-white px-3 py-1 rounded-lg bg-red-500">
-                    ลบ
-                  </button>
+                <td className="p-2 flex gap-2 justify-center">
+                  {canEdit && (
+                    <button
+                      onClick={() => router.push(`/admin/campaign/${c.id}/edit`)}
+                      className="text-white px-3 py-1 rounded-lg bg-paseo"
+                    >
+                      แก้ไข
+                    </button>
+                  )}
+
+                  {canDelete && (
+                    <button
+                      onClick={() => deleteCampaign(c.id)}
+                      className="text-white px-3 py-1 rounded-lg bg-red-500"
+                    >
+                      ลบ
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

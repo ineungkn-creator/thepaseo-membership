@@ -171,10 +171,19 @@ export default function AdminReceiptsPage() {
       if (!settingRes.ok) throw new Error("โหลดการตั้งค่าพอยต์ไม่สำเร็จ");
       const setting = await settingRes.json();
 
-      // ✅ คำนวณพอยท์ตาม rate
-      const rateAmount = setting.receiptRateAmount || 1;
-      const ratePoints = setting.receiptRatePoints || 0;
-      const pointsToAdd = Math.floor(amountValue / rateAmount) * ratePoints;
+        // ✅ คำนวณพอยท์ตาม rate
+        const calcRes = await fetch("/api/admin/points/calculate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: amountValue,
+          shopId,
+        }),
+      });
+
+      if (!calcRes.ok) throw new Error("คำนวณพอยท์ไม่สำเร็จ");
+
+      const { points: pointsToAdd } = await calcRes.json();
 
       // ✅ ดึงข้อมูลใบเสร็จนี้เพื่อดูชื่อผู้ใช้
       const r = receipts.find((x) => x.id === receiptId);

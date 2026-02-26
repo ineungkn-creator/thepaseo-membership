@@ -31,6 +31,7 @@ export default function EditShopPage() {
     location: '',
     categoryId: '',
     branchId: '',
+    customRate: '' as string | number,
   });
 
   // โหลดข้อมูลร้าน + branch/category
@@ -55,6 +56,7 @@ export default function EditShopPage() {
           location: shop.location || '',
           categoryId: shop.categoryId || '',
           branchId: shop.branchId || '',
+          customRate: shop.customRate ?? '',
         });
 
         setTags(shop.tags?.map((t: any) => t.id) || []);
@@ -250,6 +252,24 @@ export default function EditShopPage() {
               </div>
 
               <TagSelector value={tags} onChange={setTags} />
+
+              <div className="sm:col-span-3">
+                <label className="block text-sm/6 font-medium text-gray-900">Costom Rate</label>
+                <div className="mt-2">
+                  <input
+                    type="number"
+                    className="w-full border p-2 rounded-lg"
+                    placeholder="อัตราการแลกพอยท์ เช่น 25"
+                    value={form.customRate}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        customRate: e.target.value === '' ? '' : Number(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+              </div>
 
               <button
                 type="submit"

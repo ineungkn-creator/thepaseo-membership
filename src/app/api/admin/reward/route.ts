@@ -7,6 +7,12 @@ import {
   makePublicUrl,
 } from "@/lib/storage";
 import fs from "fs";
+import { getServerSession } from "next-auth";
+import { authConfig } from "@/lib/auth.config";
+import {
+  hasPermission,
+  PERMISSIONS,
+} from "@/lib/auth/permissions";
 
 const prisma = new PrismaClient();
 
@@ -65,6 +71,14 @@ export async function GET(req: Request) {
 // ✅ POST: สร้าง reward ใหม่
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession(authConfig);
+
+    if (!session) return new Response("Unauthorized", { status: 401 });
+
+    if (!hasPermission(session.user.role, PERMISSIONS.REWARD_CREATE)) {
+      return new Response("Forbidden", { status: 403 });
+    }
+
     const formData = await req.formData();
 
     const startDateRaw = formData.get("startDate")?.toString() || null;

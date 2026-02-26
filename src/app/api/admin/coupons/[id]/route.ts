@@ -8,6 +8,12 @@ import {
 } from "@/lib/storage";
 import fs from "fs";
 import path from "path";
+import { getServerSession } from "next-auth";
+import { authConfig } from "@/lib/auth.config";
+import {
+  hasPermission,
+  PERMISSIONS,
+} from "@/lib/auth/permissions";
 
 const prisma = new PrismaClient();
 
@@ -52,6 +58,17 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 // ✅ PUT: อัปเดตคูปอง (รองรับ Redemption)
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const session = await getServerSession(authConfig);
+
+    if (!session) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    const role = session.user.role;
+
+    if (!hasPermission(role, PERMISSIONS.COUPONS_EDIT)) {
+      return new Response("Forbidden", { status: 403 });
+    }
     const { id } = await params;
     const formData = await req.formData();
 

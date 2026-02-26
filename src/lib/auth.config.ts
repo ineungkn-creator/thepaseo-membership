@@ -1,10 +1,14 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import LineProvider from "next-auth/providers/line";
-import { prisma } from "@/lib/prisma";
 import { decode as jwtDecode } from "jsonwebtoken";
 import bcrypt from "bcryptjs"; // ✅ เพิ่มเพื่อใช้ตรวจรหัสผ่านแอดมิน
 import { generateReferralCode } from "@/utils/referral";
+import { ROLE_PERMISSIONS } from "@/lib/auth/permissions";
+
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 export const authConfig: NextAuthOptions = {
   providers: [
@@ -212,20 +216,39 @@ cookies: {
         token.lineId = user?.id;
       }
 
+      // ✅ ตอน login ครั้งแรก
       if (user) {
         token.id = user.id;
-        token.name = user.name;
-        token.phone = user.phone;
-        token.email = user.email;
-        token.role = user.role;
-        token.dateOfBirth = user.dateOfBirth ?? null;
-        token.gender = user.gender ?? null;
-        token.branchId = user.branchId ?? null;
-        token.occupation = user.occupation ?? null;
+      }
 
-        if ((user as any).lineId) token.lineId = (user as any).lineId;
-        if ((user as any).avatar) token.avatar = (user as any).avatar;
-        if ((user as any).redirectTo) token.redirectTo = (user as any).redirectTo;
+      // ✅ ดึงข้อมูลล่าสุดจาก DB ทุกครั้ง
+      if (token.id) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            email: true,
+            role: true,
+            dateOfBirth: true,
+            gender: true,
+            branchId: true,
+            occupation: true,
+          },
+        });
+
+        if (dbUser) {
+          token.name = dbUser.name;
+          token.phone = dbUser.phone;
+          token.email = dbUser.email;
+          token.role = dbUser.role;
+          token.dateOfBirth = dbUser.dateOfBirth;
+          token.gender = dbUser.gender;
+          token.branchId = dbUser.branchId;
+          token.occupation = dbUser.occupation;
+          token.permissions = ROLE_PERMISSIONS[dbUser.role] ?? [];
+        }
       }
 
       if (trigger === "update" && session) {
@@ -347,15 +370,18 @@ cookies: {
       Object.assign(user, dbUser);
       if (!dbUser) return false;
 
-      const isIncomplete =
-        !dbUser.dateOfBirth ||
-        !dbUser.gender ||
-        !dbUser.phone ||
-        !dbUser.branchId ||
-        !dbUser.occupation;
+      // ✅ เช็คเฉพาะ USER เท่านั้น
+      if (dbUser.role === "USER") {
+        const isIncomplete =
+          !dbUser.dateOfBirth ||
+          !dbUser.gender ||
+          !dbUser.phone ||
+          !dbUser.branchId ||
+          !dbUser.occupation;
 
-      if (isIncomplete) {
-        (user as any).redirectTo = "/complete-profile";
+        if (isIncomplete) {
+          (user as any).redirectTo = "/complete-profile";
+        }
       }
 
       return true;

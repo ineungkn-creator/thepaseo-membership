@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { hasPermission, PERMISSIONS } from "@/lib/auth/permissions";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -12,6 +14,7 @@ import { CiBitcoin } from "react-icons/ci";
 import { FaStar } from "react-icons/fa";
 
 import { IoIosAddCircle } from "react-icons/io";
+
 
 type RewardData = {
   id: string;
@@ -41,6 +44,14 @@ export default function AdminRewardList() {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedReward, setSelectedReward] = useState<RewardData | null>(null);
   const router = useRouter();
+  const { data: session } = useSession();
+  const role = session?.user?.role;
+
+  const canEdit =
+    role && hasPermission(role, PERMISSIONS.REWARD_EDIT);
+
+  const canDelete =
+    role && hasPermission(role, PERMISSIONS.REWARD_DELETE);
 
   const fetchRewards = async (page: number) => {
     try {
@@ -164,20 +175,26 @@ export default function AdminRewardList() {
                 </td>
 
                 <td className="p-2 border text-center">{r.redemptions?.length || 0}</td>
-                <td className="p-2 flex gap-2">
-                  <button
+                <td className="p-2 flex gap-2 justify-center">
+                  {canEdit && (
+                      <button
                     onClick={() => router.push(`/admin/reward/${r.id}/edit`)}
                     className="text-white px-3 py-1 rounded-lg bg-paseo"
                   >
                     แก้ไข
                   </button>
-                  <button
-                    onClick={() => deleteReward(r.id)}
-                    className="text-white px-3 py-1 rounded-lg bg-red-500"
-                  >
-                    ลบ
-                  </button>
-                </td>
+                    )}
+
+                    {canDelete && (
+                      <button
+                      onClick={() => deleteReward(r.id)}
+                      className="text-white px-3 py-1 rounded-lg bg-red-500"
+                    >
+                      ลบ
+                    </button>
+                    )}
+                  </td>
+                
               </tr>
             ))}
           </tbody>
