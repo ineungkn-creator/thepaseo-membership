@@ -62,7 +62,7 @@ export default function AdminInterestPage() {
         <input
           type="text"
           placeholder="เพิ่มสิ่งที่สนใจใหม่..."
-          className="border rounded-lg px-3 py-2 flex-1"
+          className="input"
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
         />

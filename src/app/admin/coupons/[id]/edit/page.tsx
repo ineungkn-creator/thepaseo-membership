@@ -87,7 +87,7 @@ export default function EditCouponPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const resShops = await fetch("/api/admin/shop");
+        const resShops = await fetch("/api/admin/shop?take=9999");
         const dataShops = await resShops.json();
         setShops(Array.isArray(dataShops) ? dataShops : dataShops.shops || []);
 
@@ -174,7 +174,7 @@ export default function EditCouponPage() {
               type="file"
               accept="image/*"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
-              className="w-full"
+              className="file-input"
             />
             {preview ? (
               <Image
@@ -202,7 +202,7 @@ export default function EditCouponPage() {
               type="text"
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              className="w-full px-3 py-2 border rounded"
+              className="input"
               required
             />
           </div>
@@ -213,7 +213,7 @@ export default function EditCouponPage() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border rounded"
+              className="input"
               required
             />
           </div>
@@ -226,7 +226,7 @@ export default function EditCouponPage() {
                 type="datetime-local"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full border p-2 rounded-lg"
+                className="input"
               />
             </div>
             <div>
@@ -235,7 +235,7 @@ export default function EditCouponPage() {
                 type="datetime-local"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full border p-2 rounded-lg"
+                className="input"
               />
             </div>
           </div>
@@ -246,7 +246,7 @@ export default function EditCouponPage() {
               type="datetime-local"
               value={expiresAt}
               onChange={(e) => setExpiresAt(e.target.value)}
-              className="w-full border p-2 rounded-lg"
+              className="input"
             />
           </div>
 
@@ -258,7 +258,7 @@ export default function EditCouponPage() {
                 type="number"
                 value={pointCost}
                 onChange={(e) => setPointCost(Number(e.target.value))}
-                className="w-full border p-2 rounded-lg"
+                className="input"
               />
             </div>
             <div>
@@ -267,7 +267,7 @@ export default function EditCouponPage() {
                 type="number"
                 value={pointEarn}
                 onChange={(e) => setPointEarn(Number(e.target.value))}
-                className="w-full border p-2 rounded-lg"
+                className="input"
               />
             </div>
           </div>
@@ -280,7 +280,7 @@ export default function EditCouponPage() {
                 type="number"
                 value={quantity ?? ""}
                 onChange={(e) => setQuantity(e.target.value ? Number(e.target.value) : null)}
-                className="w-full border p-2 rounded-lg"
+                className="input"
               />
             </div>
             <div>
@@ -289,7 +289,7 @@ export default function EditCouponPage() {
                 type="number"
                 value={maxPerUser ?? ""}
                 onChange={(e) => setMaxPerUser(e.target.value ? Number(e.target.value) : null)}
-                className="w-full border p-2 rounded-lg"
+                className="input"
               />
             </div>
           </div>
@@ -298,7 +298,7 @@ export default function EditCouponPage() {
           <select
             value={campaignId || ""}
             onChange={(e) => setCampaignId(e.target.value || null)}
-            className="w-full border p-2 rounded-lg"
+            className="input"
           >
             <option value="">-- เลือก Campaign (optional) --</option>
             {campaigns.map((c) => (
@@ -354,7 +354,7 @@ export default function EditCouponPage() {
               placeholder="🔍 ค้นหาร้านค้า..."
               value={shopSearch}
               onChange={(e) => setShopSearch(e.target.value)}
-              className="w-full border p-2 rounded-lg mb-2"
+              className="input mb-2"
             />
 
             <select
@@ -370,7 +370,7 @@ export default function EditCouponPage() {
                   setIsRedemption(false);
                 }
               }}
-              className="w-full border p-2 rounded-lg"
+              className="input"
             >
               <option value="redemption">🎁 จุดบริการ (Redemption)</option>
 

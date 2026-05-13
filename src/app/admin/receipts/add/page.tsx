@@ -1,7 +1,6 @@
-//app/admin/receipts/add/page.tsx
-"use client";
-import { useEffect, useState, useRef } from "react";
-import Image from "next/image";
+"use client"
+
+import { useEffect, useRef, useState } from "react"
 
 interface User {
   id: string;
@@ -14,495 +13,632 @@ interface User {
 }
 
 interface ShopBranchOption {
-  shopId: string;
-  shopName: string;
-  branchId: string;
-  branchName: string;
-  id: string; // `${shopId}__${branchId}`
+  shopId: string
+  shopName: string
+  branchId: string
+  branchName: string
+  id: string
 }
 
 type Receipt = {
   id: string
-  userId: string
-  user?: User | null
-  phone: string | null
   amount: number
-  fileUrl: string
-  fileType: string
-  rejectReason?: string | null
-  status: "PENDING" | "APPROVED" | "REJECTED"
-  reviewedBy?: string | null
-  reviewedAt?: string | null
+  receiptNumber?: string | null
+  receiptDate?: string | null
+  receiptTime?: string | null
   createdAt: string
-  shopId?: string | null
-  branchId?: string | null
+  status: string
+  shop?: { name: string }
+  branch?: { name: string }
 }
 
-export default function AdminAddReceiptPage() {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [users, setUsers] = useState<User[]>([]);
-  const [shopBranches, setShopBranches] = useState<ShopBranchOption[]>([]);
-  const [shopQuery, setShopQuery] = useState("");
-  const [selectedShopId, setSelectedShopId] = useState("");
-  const [searchPhone, setSearchPhone] = useState("");
-  const [searchEmail, setSearchEmail] = useState("");
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [userHistory, setUserHistory] = useState<Record<string, Receipt[]>>({})
+export default function AdminAddReceiptPage(){
 
-  const getCurrentDate = () => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
+  const receiptRef = useRef<HTMLInputElement>(null)
+  const amountRef = useRef<HTMLInputElement>(null)
 
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [fileName, setFileName] = useState("ยังไม่มีไฟล์ที่เลือก...");
-  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [shopBranches,setShopBranches] = useState<ShopBranchOption[]>([])
+  const [shopQuery,setShopQuery] = useState("")
+  const [selectedShopId,setSelectedShopId] = useState("")
 
-  const [form, setForm] = useState({
-    userId: "",
-    amount: "",
-    reviewedAt: getCurrentDate(),
-    image: null as File | null,
-  });
+  const [search,setSearch] = useState("")
+  const [selectedUser,setSelectedUser] = useState<User|null>(null)
 
-  async function fetchUserHistory(userId: string) {
+  const [userHistory,setUserHistory] = useState<Record<string,Receipt[]>>({})
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null)
+  const receiptTimeout = useRef<NodeJS.Timeout | null>(null)
+
+  const [receiptStatus,setReceiptStatus] = useState<
+    "idle"|"checking"|"valid"|"duplicate"
+  >("idle")
+
+  const today = new Date().toISOString().split("T")[0]
+
+  const [form,setForm] = useState({
+    receiptNumber:"",
+    receiptDate: today,
+    receiptTime:"",
+    amount:""
+  })
+
+  useEffect(()=>{
+    receiptRef.current?.focus()
+  },[])
+
+  useEffect(()=>{
+    fetch("/api/admin/receipts/shop")
+      .then(res=>res.json())
+      .then(setShopBranches)
+  },[])
+
+  const checkReceipt = async(shopIdParam?:string)=>{
+
+  const shopIdValue = shopIdParam || selectedShopId
+    if(!form.receiptNumber || !shopIdValue) return
+
+    const [shopId] = shopIdValue.split("__")
+    setReceiptStatus("checking")
+
+    const res = await fetch("/api/admin/receipts/check",{
+      method:"POST",
+      headers:{
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      receiptNumber:form.receiptNumber,
+      shopId
+    })
+  })
+
+  const data = await res.json()
+
+  if(data.duplicate){
+    setReceiptStatus("duplicate")
+  }else{
+    setReceiptStatus("valid")
+  }
+
+  }
+
+  const checkReceiptRealtime = async(receiptNumber:string)=>{
+
+    if(!receiptNumber || !selectedShopId) return
+    const [shopId] = selectedShopId.split("__")
+    setReceiptStatus("checking")
+
+    const res = await fetch("/api/admin/receipts/check",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        receiptNumber,
+        shopId
+      })
+    })
+
+    const data = await res.json()
+
+    if(data.duplicate){
+      setReceiptStatus("duplicate")
+    }else{
+      setReceiptStatus("valid")
+    }
+
+  }
+
+  const fetchUserHistory = async(userId:string)=>{
+
+    const res = await fetch(`/api/admin/receipts/history?userId=${userId}`)
+    const data = await res.json()
+
+    setUserHistory(prev=>({
+      ...prev,
+      [userId]:data
+    }))
+
+  }
+
+  const searchUser = async()=>{
+
+    if(!search) return
+
+    let url=""
+
+    if(search.includes("@")){
+      url=`/api/admin/users/search?email=${search}`
+    }else{
+      url=`/api/admin/users/search?phone=${search}`
+    }
+
+    const res = await fetch(url)
+
+    if(!res.ok){
+      alert("ไม่พบผู้ใช้")
+      setSelectedUser(null)
+    return
+  }
+
+    const user = await res.json()
+
+    setSelectedUser(user)
+
+    fetchUserHistory(user.id)
+
+    amountRef.current?.focus()
+
+  }
+
+  const saveReceipt = async()=>{
+
+    if(receiptStatus==="duplicate"){
+        alert("เลขใบเสร็จถูกใช้แล้ว")
+      return
+    }
+
+    if(!selectedUser){
+        alert("กรุณาเลือกลูกค้า")
+      return
+    }
+
+    if(!form.amount){
+        alert("กรุณากรอกจำนวนเงิน")
+      return
+    }
+
+    if(!selectedShopId){
+        alert("กรุณาเลือกร้าน")
+      return
+    }
+
+    const amountValue = Number(form.amount)
+
+    if(isNaN(amountValue) || amountValue <= 0){
+        alert("จำนวนเงินไม่ถูกต้อง")
+      return
+    }
+
+    const [shopId,branchId] = selectedShopId.split("__")
+
+    try{
+
+    // ========================
+    // โหลด setting
+    // ========================
+
+    const settingRes = await fetch("/api/admin/points/general_setting")
+
+    if(!settingRes.ok){
+      throw new Error("โหลดการตั้งค่าพอยท์ไม่สำเร็จ")
+    }
+
+    const setting = await settingRes.json()
+
+    // ========================
+    // คำนวณพอยท์
+    // ========================
+
+    const calcRes = await fetch("/api/admin/points/calculate",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        amount:amountValue,
+        shopId
+      })
+    })
+
+    if(!calcRes.ok){
+      throw new Error("คำนวณพอยท์ไม่สำเร็จ")
+    }
+
+    const {points} = await calcRes.json()
+
+    // ========================
+    // confirm dialog
+    // ========================
+
+    const confirmMsg = `
+      ⚡ ยืนยันเพิ่มใบเสร็จ ⚡
+
+      ชื่อ: ${selectedUser.name}
+      เบอร์: ${selectedUser.phone}
+
+      จำนวนเงิน: ${amountValue.toLocaleString("th-TH")} บาท
+      จะได้รับพอยท์: ${points.toLocaleString("th-TH")} พอยท์
+
+      ต้องการบันทึกหรือไม่?
+    `
+
+    const confirmed = window.confirm(confirmMsg)
+
+    if(!confirmed) return
+
+    // ========================
+    // save receipt
+    // ========================
+
+    const fd = new FormData()
+
+    fd.append("userId",selectedUser.id)
+    fd.append("amount",form.amount)
+    fd.append("receiptNumber",form.receiptNumber)
+    fd.append("receiptDate",form.receiptDate)
+    fd.append("receiptTime",form.receiptTime)
+    fd.append("shopId",shopId)
+    fd.append("branchId",branchId)
+
+    const res = await fetch("/api/admin/receipts",{
+      method:"POST",
+      body:fd
+    })
+
+    if(res.ok){
+
+      alert(`เพิ่มใบเสร็จสำเร็จ\nลูกค้าได้รับ ${points} พอยท์`)
+
+      setForm({
+        receiptNumber:"",
+        receiptDate:"",
+        receiptTime:"",
+        amount:""
+      })
+
+      setSelectedUser(null)
+      setSearch("")
+      setReceiptStatus("idle")
+
+      receiptRef.current?.focus()
+
+      }else{
+
+        const err = await res.json()
+        alert(err.error)
+
+      }
+
+    }catch(err){
+
+    console.error("saveReceipt error:",err)
+      alert("เกิดข้อผิดพลาด")
+
+    }
+
+  }
+
+  const filteredShops = shopBranches.filter(s=>
+    `${s.shopName} ${s.branchName}`
+      .toLowerCase()
+      .includes(shopQuery.toLowerCase())
+  )
+
+  const autoSearchUser = async (value: string) => {
+
+    if (!value || value.length < 6) {
+      setSelectedUser(null)
+      return
+    }
+
+    let url = ""
+
+    if (value.includes("@")) {
+      url = `/api/admin/users/search?email=${encodeURIComponent(value)}`
+    } else {
+      url = `/api/admin/users/search?phone=${encodeURIComponent(value)}`
+    }
+
     try {
-      const res = await fetch(`/api/admin/receipts/history?userId=${userId}`)
-      if (!res.ok) throw new Error("fetch history failed")
-      const data = await res.json()
-      setUserHistory((prev) => ({ ...prev, [userId]: data }))
+
+      const res = await fetch(url)
+
+      if (!res.ok) {
+        setSelectedUser(null)
+        return
+      }
+
+      const user = await res.json()
+
+      setSelectedUser(user)
+
+      // โหลด history
+      fetchUserHistory(user.id)
+
+      // focus amount
+      amountRef.current?.focus()
+
     } catch (err) {
-      console.error("fetchUserHistory error:", err)
+      console.error("autoSearchUser error:", err)
     }
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleSearchUser();
-    }
-  };
-  
-  const handleSearchUser = async () => {
-    if (!searchPhone && !searchEmail) {
-      alert("กรุณากรอกเบอร์โทรหรืออีเมล");
-      return;
-    }
+  return(
 
-    const query = searchPhone
-      ? `phone=${encodeURIComponent(searchPhone)}`
-      : `email=${encodeURIComponent(searchEmail)}`;
+    <div className="flex flex-col gap-6">
 
-    try {
-      const res = await fetch(`/api/admin/users/search?${query}`);
-      if (!res.ok) throw new Error("User not found");
-      const data = await res.json();
+      <h1 className="text-xl font-bold">
+        พิ่มใบเสร็จ (Counter)
+      </h1>
 
-      setSelectedUser(data);
-      setForm((prev) => ({ ...prev, userId: data.id }));
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-      // 🔹 โหลดประวัติ
-      fetchUserHistory(data.id);
-    } catch (err) {
-      console.error("handleSearchUser error:", err);
-      alert("ไม่พบผู้ใช้");
-      setSelectedUser(null);
-    }
-  };
+        {/* ================= LEFT : FORM ================= */}
 
-  useEffect(() => {
-    fetch("/api/admin/receipts/shop")
-      .then((res) => {
-        if (!res.ok) throw new Error(`Failed to fetch shops: ${res.status}`);
-        return res.json();
-      })
-      .then((data) => {
-        console.log("Shop branches data:", data);
-        if (!Array.isArray(data)) {
-          throw new Error("Invalid shops data: expected array");
-        }
-        setShopBranches(data);
-        if (data.length === 0) {
-          alert("ไม่พบข้อมูลร้านค้า กรุณาตรวจสอบฐานข้อมูล");
-        }
-      })
-      .catch((err) => {
-        console.error("fetchShopBranches error:", err);
-        alert("ไม่สามารถโหลดข้อมูลร้านค้าและสาขาได้: " + err.message);
-      });
-  }, []);
+        <div className="bg-white p-6 rounded-xl shadow flex flex-col gap-4">
 
-  // โหลดรายชื่อผู้ใช้
-  useEffect(() => {
-    fetch("/api/admin/users")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch users");
-        return res.json();
-      })
-      .then((data) => {
-        setUsers(data.users);
-      })
-      .catch((err) => {
-        console.error("fetchUsers error:", err);
-        alert("ไม่สามารถโหลดข้อมูลผู้ใช้ได้");
-      });
-  }, []);
+          {/* RECEIPT */}
+          <div>
+            <label className="font-semibold text-sm">เลขใบเสร็จ</label>
+            <input
+              ref={receiptRef}
+              className="input"
+              value={form.receiptNumber}
+              onChange={(e)=>{
+                const value = e.target.value
+                setForm({...form,receiptNumber:value})
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleSearchPhone = async () => {
-    if (!searchPhone) return;
-    try {
-      const res = await fetch(`/api/admin/users/search?phone=${searchPhone}`);
-      if (!res.ok) throw new Error("User not found");
-      const data = await res.json();
-      if (data) {
-        setSelectedUser(data);
-        setForm((prev) => ({ ...prev, userId: data.id }));
-      } else {
-        alert("ไม่พบผู้ใช้");
-        setSelectedUser(null);
-      }
-    } catch (err) {
-      console.error("handleSearchPhone error:", err);
-      alert("ไม่พบผู้ใช้");
-      setSelectedUser(null);
-    }
-  };
+                if(receiptTimeout.current){
+                clearTimeout(receiptTimeout.current)
+              }
 
-  // กรองร้านค้าและสาขา
-  const filteredShopBranches = () => {
-    if (!shopQuery) return shopBranches;
-    return shopBranches.filter((s) =>
-      `${s.shopName} ${s.branchName}`.toLowerCase().includes(shopQuery.toLowerCase())
-    );
-  };
+              receiptTimeout.current = setTimeout(()=>{
+                checkReceiptRealtime(value)
+                },400)
+              }}
+            />
 
-  const handleSubmit = async () => {
-    if (!form.userId || !form.amount || !selectedShopId) {
-      alert("กรุณากรอกข้อมูลให้ครบ: ผู้ใช้, จำนวนเงิน, ร้านค้า/สาขา");
-      return;
-    }
+            {receiptStatus==="checking" &&
+              <p className="text-gray-500 font-semibold text-sm">กำลังตรวจสอบ...</p>
+            }
 
-    const amountValue = Number(form.amount);
-    if (isNaN(amountValue) || amountValue <= 0) {
-      alert("กรุณากรอกจำนวนเงินที่ถูกต้อง");
-      return;
-    }
+            {receiptStatus==="valid" &&
+              <p className="text-paseo font-semibold text-sm">✓ ยังไม่ถูกใช้</p>
+            }
 
-    const [shopId, branchId] = selectedShopId.split("__");
+            {receiptStatus==="duplicate" &&
+              <p className="text-red-600 font-semibold text-sm">✗ ใบเสร็จนี้ถูกใช้แล้ว</p>
+            }
 
-    try {
-      // ✅ ดึง point setting ปัจจุบัน
-      const settingRes = await fetch("/api/admin/points/general_setting");
-      if (!settingRes.ok) throw new Error("โหลดการตั้งค่าพอยต์ไม่สำเร็จ");
-      const setting = await settingRes.json();
-
-      // ✅ คำนวณพอยท์ตาม rate
-      const calcRes = await fetch("/api/admin/points/calculate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            amount: amountValue,
-            shopId,
-          }),
-        });
-
-        if (!calcRes.ok) throw new Error("คำนวณพอยท์ไม่สำเร็จ");
-
-        const { points: pointsToAdd } = await calcRes.json();
-
-      // ✅ แสดงกล่องยืนยัน
-      const confirmMsg = `
-  ⚡ ยืนยันการเพิ่มใบเสร็จ ⚡
-
-  ชื่อ: ${selectedUser?.name || "-"}
-  เบอร์โทร: ${selectedUser?.phone || "-"}
-  อีเมล: ${selectedUser?.email || "-"}
-  จำนวนเงิน: ${amountValue.toLocaleString("th-TH")} บาท
-  จะได้รับพอยต์: ${pointsToAdd.toLocaleString("th-TH")} พอยท์
-
-  ต้องการบันทึกใบเสร็จนี้หรือไม่?
-      `.trim();
-
-      const confirmed = window.confirm(confirmMsg);
-      if (!confirmed) return; // ❌ ถ้ายกเลิก ไม่ทำต่อ
-
-      // ✅ สร้าง FormData สำหรับส่งไป API
-      const fd = new FormData();
-      fd.append("userId", form.userId);
-      fd.append("amount", form.amount);
-      fd.append("shopId", shopId);
-      fd.append("branchId", branchId);
-      fd.append("reviewedAt", form.reviewedAt);
-      if (form.image) fd.append("file", form.image);
-
-      const res = await fetch("/api/admin/receipts", {
-        method: "POST",
-        body: fd,
-      });
-
-      if (res.ok) {
-        alert("✅ เพิ่มใบเสร็จสำเร็จ");
-        setForm({ userId: "", amount: "", reviewedAt: getCurrentDate(), image: null });
-        setSelectedUser(null);
-        setSearchPhone("");
-        setSelectedShopId("");
-        setShopQuery("");
-        setFileName("ยังไม่มีไฟล์ที่เลือก...");
-        setImagePreviewUrl(null);
-        if (fileInputRef.current) fileInputRef.current.value = "";
-      } else {
-        const error = await res.json();
-        alert("เกิดข้อผิดพลาด: " + (error.error || "ไม่ทราบสาเหตุ"));
-      }
-    } catch (err) {
-      console.error("handleSubmit error:", err);
-      alert("เกิดข้อผิดพลาดขณะบันทึกใบเสร็จ");
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    if (file) {
-      setFileName(file.name);
-      setForm({ ...form, image: file });
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreviewUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setFileName("ยังไม่มีไฟล์ที่เลือก...");
-      setForm({ ...form, image: null });
-      setImagePreviewUrl(null);
-    }
-  };
-
-  return (
-    <div className="bg-white p-4 rounded-lg flex flex-col gap-4">
-      <h1 className="font-bold text-lg mb-4">เพิ่มใบเสร็จให้ลูกค้า</h1>
-
-      {/* ค้นหาเบอร์โทร */}
-      <div className="mb-4">
-        <label className="block text-gray-700 font-semibold mb-2">
-          ค้นหาผู้ใช้ด้วยเบอร์โทรศัพท์หรืออีเมล
-        </label>
-
-
-        <div className="flex gap-2 mb-2">
-          <input
-            type="text"
-            placeholder="เบอร์โทรศัพท์"
-            value={searchPhone}
-            onChange={(e) => setSearchPhone(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="w-1/2 pt-2 pb-2 pl-4 pr-4 border rounded-full"
-          />
-          <input
-            type="email"
-            placeholder="อีเมล"
-            value={searchEmail}
-            onChange={(e) => setSearchEmail(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="w-1/2 pt-2 pb-2 pl-4 pr-4 border rounded-full"
-          />
-          <button
-            onClick={handleSearchUser}
-            className="text-white px-4 py-2 rounded-full disabled:opacity-50"
-            style={{ backgroundColor: "#9DC93C" }}
-          >
-            ค้นหา
-          </button>
-        </div>
-        
-      </div>
-
-      {/* แสดงข้อมูลผู้ใช้ถ้าเจอ */}
-      {selectedUser && (
-        <div className="border p-3 rounded-lg shadow-md bg-white mb-4 flex flex-row">
-          <div className="flex flex-col w-50%">
-            <div className="flex items-center mb-2">
-              <strong className="w-32 font-semibold">ชื่อ:</strong>
-              <p className="w-64 font-normal">{selectedUser.name}</p>
-            </div>
-            <div className="flex items-center mb-2">
-              <strong className="w-32 font-semibold">เบอร์:</strong>
-              <p className="w-64 font-normal">{selectedUser.phone}</p>
-            </div>
-            <div className="flex items-center mb-2">
-              <strong className="w-32 font-semibold">Email:</strong>
-              <p className="w-64 font-normal">{selectedUser.email}</p>
-            </div>
-            <div className="flex items-center mb-2">
-              <strong className="w-32 font-semibold">วันเกิด:</strong>
-              <p className="w-64 font-normal">
-                {new Date(selectedUser.dateOfBirth).toLocaleDateString("th-TH", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
-            </div>
-            <div className="flex items-center mb-2">
-              <strong className="w-32 font-semibold">เพศ:</strong>
-              <p className="w-64 font-normal">{selectedUser.gender}</p>
-            </div>
-            <div className="flex items-center mb-2">
-              <strong className="w-32 font-semibold">Point:</strong>
-              <p className="w-64 font-normal">{selectedUser.pointBalance.toLocaleString("th-TH")}</p>
-            </div>
           </div>
 
-          <div className="flex flex-col w-50%">
-                <div className="flex-1">
-                  <h2 className="font-bold mb-2">📜 ประวัติการส่งใบเสร็จ</h2>
-                  {userHistory[selectedUser.id] ? (
-                    userHistory[selectedUser.id].length > 0 ? (
-                      <table className="w-full border text-sm">
-                        <thead>
-                          <tr className="bg-gray-100">
-                            <th className="border px-2 py-1">วันที่</th>
-                            <th className="border px-2 py-1">ร้านค้า</th>
-                            <th className="border px-2 py-1">สาขา</th>
-                            <th className="border px-2 py-1">จำนวนเงิน</th>
-                            <th className="border px-2 py-1">สถานะ</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {userHistory[selectedUser.id].map((h) => (
-                            <tr key={h.id}>
-                              <td className="border px-2 py-1">
-                                {new Date(h.createdAt).toLocaleDateString("th-TH")}
-                              </td>
-                              <td className="border px-2 py-1">{(h as any).shop?.name || "-"}</td>
-                              <td className="border px-2 py-1">{(h as any).branch?.name || "-"}</td>
-                              <td className="border px-2 py-1 text-right">
-                                {h.amount.toLocaleString("th-TH")}
-                              </td>
-                              <td className="border px-2 py-1">{h.status}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    ) : (
-                      <p>ยังไม่มีประวัติการส่งใบเสร็จ</p>
-                    )
-                  ) : (
-                    <p>กำลังโหลด...</p>
-                  )}
-                </div>
-          </div>
-          
-        </div>
-      )}
+          {/* SHOP */}
 
-      {/* จำนวนเงิน */}
-      <div className="mb-4">
-        <label className="block text-gray-700 font-semibold mb-2">จำนวนเงิน</label>
-        <input
-          type="number"
-          placeholder="จำนวนเงิน"
-          value={form.amount}
-          onChange={(e) => setForm({ ...form, amount: e.target.value })}
-          className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-full"
-        />
-      </div>
+          <div>
 
-      {/* วันที่ */}
-      <div className="mb-4">
-        <label className="block text-gray-700 font-semibold mb-2">วันที่</label>
-        <input
-          type="date"
-          value={form.reviewedAt}
-          onChange={(e) => setForm({ ...form, reviewedAt: e.target.value })}
-          className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-full"
-        />
-      </div>
+          <label className="text-sm font-semibold">ร้าน / สาขา</label>
+          <input
+            className="input"
+            placeholder="ค้นหาร้าน"
+            value={shopQuery}
+            onChange={(e)=>setShopQuery(e.target.value)}
+          />
 
-      {/* เลือกร้านค้าและสาขา */}
-      <div className="mb-4">
-        <label className="block text-gray-700 font-semibold mb-2">เลือกร้านค้า / สาขา</label>
-        <input
-          className="w-full pt-2 pb-2 pl-4 pr-4 border rounded-full mb-2"
-          placeholder="ค้นหาร้านหรือสาขา..."
-          value={shopQuery}
-          onChange={(e) => setShopQuery(e.target.value)}
-        />
-        <div className="border rounded max-h-48 overflow-y-auto">
-          {shopBranches.length === 0 ? (
-            <div className="p-4 text-center text-gray-500">
-              กำลังโหลดร้านค้า... หรือไม่มีข้อมูลร้านค้า
-            </div>
-          ) : filteredShopBranches().length > 0 ? (
-            filteredShopBranches().map((s) => (
+          <div className="border rounded max-h-40 overflow-y-auto">
+
+            {filteredShops.map(s=>(
               <div
                 key={s.id}
-                className={`p-2 cursor-pointer hover:bg-gray-100 flex justify-between items-center ${
-                  selectedShopId === s.id ? "bg-gray-100 border-l-4 border-paseo" : ""
-                }`}
-                onClick={() => setSelectedShopId(s.id)}
+                className={`p-2 cursor-pointer hover:bg-paseo-hover flex flex-row justify-between
+                ${selectedShopId===s.id?"bg-paseo":""}`}
+                onClick={()=>{
+                  setSelectedShopId(s.id)
+                  checkReceipt(s.id)
+                }}
               >
-                <span className="font-medium">{s.shopName}</span>
-                <span className="text-gray-600">— {s.branchName}</span>
-                {selectedShopId === s.id && (
-                  <span className="text-paseo text-xs ml-2">✓ เลือกแล้ว</span>
-                )}
+                <span className="text-sm">{s.shopName}</span>
+                <span className="text-sm">{s.branchName}</span>
               </div>
-            ))
-          ) : (
-            <div className="p-2 text-gray-500 text-center">ไม่พบร้านหรือสาขาที่ค้นหา</div>
-          )}
-        </div>
-      </div>
+            ))}
+          </div>
 
-      {/* อัปโหลดภาพ */}
-      <div className="mb-6">
-        <label className="block text-gray-700 font-semibold mb-2">อัปโหลดภาพใบเสร็จ</label>
-        <div
-          onClick={() => fileInputRef.current?.click()}
-          className="flex items-center justify-between border-2 border-dashed border-gray-300 rounded-lg p-4 cursor-pointer hover:border-paseo transition-colors duration-200"
-        >
-          <span className="text-gray-500">{fileName}</span>
-          <button
-            type="button"
-            className="text-white font-semibold py-2 px-4 rounded-full"
-            style={{ backgroundColor: "#9DC93C" }}
-          >
-            เลือกไฟล์
-          </button>
-          <input
-            id="slip"
-            name="slip"
-            type="file"
-            accept="image/*,.pdf"
-            className="hidden"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-          />
         </div>
-        {imagePreviewUrl && (
-          <div className="mt-4">
-            <Image
-              width={600}
-              height={600}
-              src={imagePreviewUrl}
-              alt="Preview"
-              className="max-w-full h-auto rounded-lg shadow-md mx-auto"
+
+        {/* CUSTOMER SEARCH */}
+
+        <div>
+
+          <label className="font-semibold text-sm">
+          เบอร์ / Email ลูกค้า
+          </label>
+
+          <input
+            className="input"
+            value={search}
+            onChange={(e)=>{
+              const value = e.target.value
+              setSearch(value)
+
+              if(searchTimeout.current){
+                clearTimeout(searchTimeout.current)
+              }
+
+              searchTimeout.current = setTimeout(()=>{
+                autoSearchUser(value)
+              },500)
+
+            }}
+            placeholder="0812345678 หรือ email"
+          />
+
+        </div>
+
+        <div className="w-full flex gap-2">
+          <div className="w-full mb-4">
+            <label className="block text-gray-700 font-semibold mb-2">
+              วันที่ในใบเสร็จ
+            </label>
+            <input
+              type="date"
+              value={form.receiptDate}
+              onChange={(e) =>
+                setForm({ ...form, receiptDate: e.target.value })
+              }
+              className="input"
             />
           </div>
-        )}
+
+          {/* เวลาในใบเสร็จ */}
+          <div className="w-full mb-4">
+            <label className="block text-gray-700 font-semibold mb-2">
+              เวลาในใบเสร็จ
+            </label>
+            <input
+              type="time"
+              value={form.receiptTime}
+              onChange={(e) =>
+                setForm({ ...form, receiptTime: e.target.value })
+              }
+              className="input"
+            />
+          </div>
+        </div>
+
+        {/* AMOUNT */}
+
+        <div>
+          <label className="font-semibold text-sm">
+          จำนวนเงิน
+          </label>
+          <input
+            ref={amountRef}
+            type="number"
+            className="input"
+            value={form.amount}
+            onChange={(e)=>setForm({...form,amount:e.target.value})}
+          />
+
+        </div>
+
+        <button
+          onClick={saveReceipt}
+          className="text-white px-4 py-2 rounded-full disabled:opacity-50 bg-paseo hover:bg-paseo-dark"
+        >
+          บันทึกใบเสร็จ
+        </button>
+
       </div>
 
-      {/* ปุ่มบันทึก */}
-      <button
-        onClick={handleSubmit}
-        className="text-white px-4 py-2 rounded-full disabled:opacity-50"
-        style={{ backgroundColor: "#9DC93C" }}
-      >
-        บันทึก
-      </button>
+        {/* ================= RIGHT : USER PANEL ================= */}
+
+        <div className="bg-white p-6 rounded-xl shadow flex flex-col gap-4">
+          <h2 className="font-bold text-sm">
+            ข้อมูลลูกค้า
+          </h2>
+
+          {!selectedUser &&
+            <p className="text-gray-400 text-sm">
+            ค้นหาลูกค้าเพื่อดูข้อมูล
+            </p>
+          }
+
+          {selectedUser &&
+          <div className="flex flex-col gap-1 border rounded-lg p-2 bg-gray-50">
+              <div className="flex items-center">
+                <strong className="w-32 text-sm font-semibold">ชื่อ:</strong>
+                <p className="w-64 text-sm font-normal">{selectedUser.name}</p>
+              </div>
+              <div className="flex items-center">
+                <strong className="w-32 text-sm font-semibold">เบอร์:</strong>
+                <p className="w-64 text-sm font-normal">{selectedUser.phone}</p>
+              </div>
+              <div className="flex items-center">
+                <strong className="w-32 text-sm font-semibold">Email:</strong>
+                <p className="w-64 text-sm font-normal">{selectedUser.email}</p>
+              </div>
+              <div className="flex items-center">
+                <strong className="w-32 text-sm font-semibold">วันเกิด:</strong>
+                <p className="w-64 text-sm font-normal">
+                  {new Date(selectedUser.dateOfBirth).toLocaleDateString("th-TH", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
+              </div>
+              <div className="flex items-center">
+                <strong className="w-32 text-sm font-semibold">เพศ:</strong>
+                <p className="w-64 text-sm font-normal">{selectedUser.gender}</p>
+              </div>
+              <div className="flex items-center">
+                <strong className="w-32 text-sm font-semibold">Point:</strong>
+                <p className="w-64 text-sm font-normal">{selectedUser.pointBalance.toLocaleString("th-TH")}</p>
+              </div>
+          </div>
+          }
+
+          {/* HISTORY */}
+
+          {selectedUser && userHistory[selectedUser.id] && (
+
+          <div>
+
+            <h2 className="font-bold mt-2">
+              ประวัติการส่งใบเสร็จ
+            </h2>
+
+            <div className="max-h-80 overflow-y-auto">
+              <table className="w-full border text-xs">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border px-1 py-1">วันที่อัปโหลด</th>
+                    <th className="border px-1 py-1">เลขใบเสร็จ</th>
+                    <th className="border px-1 py-1">วันที่ใบเสร็จ</th>
+                    <th className="border px-1 py-1">เวลา</th>
+                    <th className="border px-1 py-1">ร้านค้า</th>
+                    <th className="border px-1 py-1">สาขา</th>
+                    <th className="border px-1 py-1">จำนวนเงิน</th>
+                    <th className="border px-1 py-1">สถานะ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {userHistory[selectedUser.id].map((h) => (
+                    <tr key={h.id}>
+                    <td className="border px-1 py-1">
+                      {new Date(h.createdAt).toLocaleDateString("th-TH")}
+                    </td>
+
+                    <td className="border px-1 py-1">
+                      {(h as any).receiptNumber || "-"}
+                    </td>
+
+                    <td className="border px-1 py-1">
+                      {(h as any).receiptDate
+                        ? new Date((h as any).receiptDate).toLocaleDateString("th-TH")
+                        : "-"}
+                    </td>
+
+                    <td className="border px-1 py-1">
+                      {(h as any).receiptTime || "-"}
+                    </td>
+
+                    <td className="border px-1 py-1">
+                      {(h as any).shop?.name || "-"}
+                    </td>
+
+                    <td className="border px-1 py-1">
+                      {(h as any).branch?.name || "-"}
+                    </td>
+
+                    <td className="border px-1 py-1 text-right">
+                      {h.amount.toLocaleString("th-TH")}
+                    </td>
+
+                    <td className="border px-1 py-1">{h.status}</td>
+                  </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          )}
+
+        </div>
+
+      </div>
+
     </div>
-  );
+
+  )
+
 }

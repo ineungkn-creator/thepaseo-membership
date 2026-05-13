@@ -110,15 +110,15 @@ export default function UploadPage() {
     <div className="max-w-2xl mx-auto p-0 px-0 mb-20 md:mt-20 md:mb-0 mb-4 rounded-xl">
       <HeaderMobile showBack={true} />
       
-      <div className="md:pt-4 pt-16 mb-0 py-4 px-4 md:px-4">
+      <div className="md:mt-20 mt-0 mb-0 md:pt-6 pt-16 pb-3 px-3 md:px-4">
         <BannerUpload />
       </div>
 
-      <div className="pt-0 m-0 rounded-3xl bg-white shadow relative">
+      <div className="pt-0 m-0 rounded-xl bg-white shadow relative">
         {/* ปุ่ม Test */}
         <div className="w-full flex justify-center mb-4 -top-20 absolute flex-col items-center">
           <Button
-            className="rounded-full h-40 w-40 text-xl text-center bg-paseo-hover text-paseo flex flex-col border-4 border-paseo mb-2"
+            className="rounded-full h-40 w-40 text-xl text-center bg-paseo-hover text-paseo flex flex-col border-4 border-paseo mb-3"
             onClick={() => setShowOptions(!showOptions)}
           >
             <IoReceipt size={64} />
@@ -212,10 +212,10 @@ export default function UploadPage() {
 
         {/* ส่วน preview */}
         <div
-          className="space-y-4 p-10 z-60"
+          className="space-y-3 p-10 z-60"
           style={{ paddingTop: "7rem" }}
         >
-          <div className="mt-6 mb-6">
+          <div className="mt-8 mb-6">
 
             <p className="text-sm text-gray-600 mb-2">
               ใบเสร็จที่แนบ ( {files.length} / 10 )
@@ -241,7 +241,7 @@ export default function UploadPage() {
                         </button>
 
                         {file.type.startsWith("image/") ? (
-                          <Image
+                          <img
                             width={600}
                             height={600}
                             src={URL.createObjectURL(file)}
@@ -287,15 +287,15 @@ export default function UploadPage() {
 
         </div>
 
-        <div className="flex flex-col items-center relative">
+        <div className="w-full flex flex-col items-center relative">
           {terms && (
-            <div className="flex flex-col items-center relative mt-6">
+            <div className="w-full flex flex-col items-center relative mt-6">
 
               {/* Images */}
               {terms.images.length > 0 && (
-                <div className="w-full px-10 flex flex-col gap-4">
+                <div className="w-full flex flex-col gap-4">
                   {terms.images.map((img) => (
-                    <Image
+                    <img
                       key={img}
                       src={img}
                       width={800}
@@ -310,7 +310,7 @@ export default function UploadPage() {
           )}
 
             <div className="flex flex-row relative">
-              <Image
+              <img
                 src="/upload-l.png"
                 width={500}
                 height={500}
@@ -318,7 +318,7 @@ export default function UploadPage() {
                 className="cover"
               />
 
-              <Image
+              <img
                 src="/upload-r.png"
                 width={500}
                 height={500}

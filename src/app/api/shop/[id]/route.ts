@@ -1,16 +1,51 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+type ShopWithRelations = Prisma.ShopGetPayload<{
+  include: {
+    branch: true;
+    category: true;
+    hours: true;
+    rewards: {
+      include: {
+        branches: true;
+        shops: true;
+        participations: true;
+      };
+    };
+    event: {
+      include: {
+        branches: true;
+        shops: true;
+        registrations: true;
+      };
+    };
+    coupon: {
+      include: {
+        branches: true;
+        shops: true;
+      };
+    };
+  };
+}>;
+
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const { id } = await params;
+
     const shop = await prisma.shop.findUnique({
       where: { id },
       include: {
         branch: true,
         category: true,
+        hours: {
+          orderBy: { dayOfWeek: "asc" },
+        },
         rewards: {
           include: {
             branches: true,
@@ -32,13 +67,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
           },
         },
       },
-    });
+    }) as ShopWithRelations | null;
 
     if (!shop) {
       return NextResponse.json({ error: 'Shop not found' }, { status: 404 });
     }
 
-    // Format the response to include participant/registration counts and filter active items
     const formattedShop = {
       ...shop,
       rewards: shop.rewards
@@ -54,11 +88,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
           registrations: event.registrations.length,
         })),
       coupon: shop.coupon
-      .filter(coupon => coupon.endDate && coupon.endDate >= new Date())
-      .map(coupon => ({ ...coupon })),
+        .filter(coupon => coupon.endDate && coupon.endDate >= new Date())
+        .map(coupon => ({ ...coupon })),
     };
 
     return NextResponse.json(formattedShop);
+
   } catch (error) {
     console.error('Error fetching shop:', error);
     return NextResponse.json({ error: 'Failed to fetch shop' }, { status: 500 });

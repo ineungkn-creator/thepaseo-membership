@@ -21,6 +21,7 @@ export default function EditCampaignPage() {
   const { id } = params;
 
   // Form state
+  const [shopSearch, setShopSearch] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [linkShare, setlinkShare] = useState("");
@@ -77,7 +78,7 @@ export default function EditCampaignPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const resShops = await fetch("/api/admin/shop");
+        const resShops = await fetch("/api/admin/shop?take=9999");
         const dataShops = await resShops.json();
         setShops(Array.isArray(dataShops) ? dataShops : dataShops.shops || []);
 
@@ -158,7 +159,7 @@ export default function EditCampaignPage() {
       <form onSubmit={handleSubmit} className="space-y-4 bg-white p-4 shadow rounded-lg">
         <h1 className="text-2xl font-bold mb-4">แก้ไข Campaign</h1>
 
-        <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+        <input className="file-input" type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} />
 
         {existingImage && !preview && (
           <Image
@@ -185,7 +186,7 @@ export default function EditCampaignPage() {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border rounded"
+            className="input"
             required
           />
         </div>
@@ -197,7 +198,7 @@ export default function EditCampaignPage() {
             value={linkShare}
             onChange={(e) => setlinkShare(e.target.value)}
             placeholder="https://thepaseo.co.th/"
-            className="w-full px-3 py-2 border rounded"
+            className="input"
             required
           />
         </div>
@@ -220,7 +221,7 @@ export default function EditCampaignPage() {
               type="datetime-local"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-3 py-2 border rounded"
+              className="input"
             />
           </div>
           <div>
@@ -229,7 +230,7 @@ export default function EditCampaignPage() {
               type="datetime-local"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-3 py-2 border rounded"
+              className="input"
             />
           </div>
         </div>
@@ -242,7 +243,7 @@ export default function EditCampaignPage() {
               type="number"
               value={pointCost}
               onChange={(e) => setPointCost(parseInt(e.target.value || "0"))}
-              className="w-full px-3 py-2 border rounded"
+              className="input"
             />
           </div>
           <div>
@@ -251,7 +252,7 @@ export default function EditCampaignPage() {
               type="number"
               value={pointEarn}
               onChange={(e) => setPointEarn(parseInt(e.target.value || "0"))}
-              className="w-full px-3 py-2 border rounded"
+              className="input"
             />
           </div>
         </div>
@@ -263,7 +264,7 @@ export default function EditCampaignPage() {
               type="number"
               value={quantity}
               onChange={(e) => setQuantity(parseInt(e.target.value || "0"))}
-              className="w-full px-3 py-2 border rounded-lg"
+              className="input"
               placeholder="Quantity"
             />
           </div>
@@ -273,7 +274,7 @@ export default function EditCampaignPage() {
               type="number"
               value={maxPerUser}
               onChange={(e) => setMaxPerUser(parseInt(e.target.value || "0"))}
-              className="w-full px-3 py-2 border rounded-lg"
+              className="input"
               placeholder="Max Per User"
             />
           </div>
@@ -308,6 +309,15 @@ export default function EditCampaignPage() {
 
         {/* Shop select */}
         <div>
+          <label className="block mb-1 font-medium">ร้านค้า / จุดบริการ</label>
+          <input
+            type="text"
+            placeholder="🔍 ค้นหาร้านค้า..."
+            value={shopSearch}
+            onChange={(e) => setShopSearch(e.target.value)}
+            className="input mb-2"
+          />
+
           <label className="block mb-1 font-medium">ร้านค้า</label>
           <select
             multiple
@@ -317,7 +327,9 @@ export default function EditCampaignPage() {
             }
             className="w-full px-3 py-2 border rounded-lg"
           >
-            {shops.map((s) => (
+            {shops
+            .filter((s) => s.name.toLowerCase().includes(shopSearch.toLowerCase()))
+            .map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
               </option>

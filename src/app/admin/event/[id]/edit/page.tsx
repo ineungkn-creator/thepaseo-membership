@@ -81,7 +81,7 @@ setEndDate(new Date(data.endDate).toISOString().slice(0,16));
   useEffect(() => {
     const loadData = async () => {
       try {
-        const resShops = await fetch("/api/admin/shop");
+        const resShops = await fetch("/api/admin/shop?take=9999");
         const dataShops = await resShops.json();
         setShops(Array.isArray(dataShops) ? dataShops : dataShops.shops || []);
 
@@ -176,7 +176,7 @@ setEndDate(new Date(data.endDate).toISOString().slice(0,16));
               onChange={(e) => {
                 if (e.target.files && e.target.files[0]) setFile(e.target.files[0]);
               }}
-              className="w-full"
+              className="file-input"
             />
             {preview ? (
               <Image
@@ -204,7 +204,7 @@ setEndDate(new Date(data.endDate).toISOString().slice(0,16));
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border rounded"
+              className="input"
             />
           </div>
 
@@ -215,7 +215,7 @@ setEndDate(new Date(data.endDate).toISOString().slice(0,16));
               value={linkShare}
               onChange={(e) => setlinkShare(e.target.value)}
               placeholder="https://thepaseo.co.th/"
-              className="w-full px-3 py-2 border rounded"
+              className="input"
               required
             />
           </div>
@@ -228,7 +228,7 @@ setEndDate(new Date(data.endDate).toISOString().slice(0,16));
                 required
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 border rounded"
+                className="input"
               />
             </div>
             <div>
@@ -238,7 +238,7 @@ setEndDate(new Date(data.endDate).toISOString().slice(0,16));
                 required
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 border rounded"
+                className="input"
               />
             </div>
           </div>
@@ -251,7 +251,7 @@ setEndDate(new Date(data.endDate).toISOString().slice(0,16));
                 min={0}
                 value={pointCost}
                 onChange={(e) => setPointCost(Number(e.target.value))}
-                className="w-full px-3 py-2 border rounded"
+                className="input"
               />
             </div>
             <div>
@@ -261,7 +261,7 @@ setEndDate(new Date(data.endDate).toISOString().slice(0,16));
                 min={0}
                 value={pointEarn}
                 onChange={(e) => setPointEarn(Number(e.target.value))}
-                className="w-full px-3 py-2 border rounded"
+                className="input"
               />
             </div>
             <div>
@@ -271,7 +271,7 @@ setEndDate(new Date(data.endDate).toISOString().slice(0,16));
                 min={0}
                 value={quantity}
                 onChange={(e) => setQuantity(Number(e.target.value))}
-                className="w-full px-3 py-2 border rounded"
+                className="input"
               />
             </div>
             <div>
@@ -281,7 +281,7 @@ setEndDate(new Date(data.endDate).toISOString().slice(0,16));
                 min={1}
                 value={maxPerUser}
                 onChange={(e) => setMaxPerUser(Number(e.target.value))}
-                className="w-full px-3 py-2 border rounded"
+                className="input"
               />
             </div>
           </div>
@@ -331,7 +331,7 @@ setEndDate(new Date(data.endDate).toISOString().slice(0,16));
               placeholder="🔍 ค้นหาร้านค้า..."
               value={shopSearch}
               onChange={(e) => setShopSearch(e.target.value)}
-              className="w-full border p-2 rounded-lg mb-2"
+              className="input mb-2"
             />
 
             <select
@@ -342,7 +342,7 @@ setEndDate(new Date(data.endDate).toISOString().slice(0,16));
                   Array.from(e.target.selectedOptions, (option) => option.value)
                 )
               }
-              className="w-full px-3 py-2 border rounded"
+              className="input"
             >
               {shops
                 .filter((s) => s.name.toLowerCase().includes(shopSearch.toLowerCase()))

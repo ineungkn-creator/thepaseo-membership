@@ -9,10 +9,11 @@ export const shopCategorySchema = z.object({
     .regex(/^[a-z0-9-]+$/, "ใช้ได้เฉพาะตัวอักษรเล็ก, ตัวเลข และขีดกลาง"),
   imageUrl: z
     .string()
-    .min(1, "กรุณาใส่ URL รูปภาพ")
-    .refine((val) => val.startsWith("/") || val.startsWith("http"), {
+    .optional()
+    .refine((val) => !val || val.startsWith("/") || val.startsWith("http"), {
       message: "กรุณาใส่ URL รูปภาพ",
     }),
+    color: z.string().optional(),
 });
 
 export type ShopCategoryFormValues = z.infer<typeof shopCategorySchema>;

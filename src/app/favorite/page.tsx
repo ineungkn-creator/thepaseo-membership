@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import UserProfile from '@/components/UserProfile/page';
 import Loading from '@/components/loading';
 import HeaderMobile from '@/components/HeaderMobile/page';
 import MenuProfile from '@/components/MenuProfile/page';
@@ -82,17 +81,10 @@ export default function FavoritePage() {
 
 
   return (
-      <div className="max-w-2xl mx-auto md:pt-4 pt-14 mb-20 md:mt-20 md:mb-20 rounded-2xl">
+      <div className="max-w-2xl mx-auto p-0 px-0 mb-20 md:mt-20 md:mb-0 mb-4 rounded-xl">
+          <HeaderMobile />
       
-        <HeaderMobile />
-      
-          <div className="max-w-2xl mx-auto p-0 -mb-14 md:mt-0 md:-mb-16 rounded-xl">
-            <div className="w-full pt-4 px-4 md:pt-0 md:px-20 md:pb-0">
-              <UserProfile />
-            </div>
-          </div>
-  
-          <div className="w-full bg-white p-4 pt-16 md:p-10 md:pt-20 rounded-t-5xl rounded-xl">
+            <div className="relative max-w-2xl shadow-md mx-auto p-0 px-4 pt-4 pb-4 md:mt-20 mt-44 mb-6 bg-white rounded-3xl rounded-b-xl">
   
             <MenuProfile />
   

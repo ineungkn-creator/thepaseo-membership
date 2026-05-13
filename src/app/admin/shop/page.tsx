@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useMemo } from "react";
 import Link from 'next/link';
 import Image from 'next/image';
 import { CiSearch } from 'react-icons/ci';
@@ -21,7 +22,10 @@ interface Shop {
   location?: string;
   categoryId?: string;
   branchId?: string;
-  category?: { name: string };
+  category?: { 
+    name: string
+    color?: string
+  };
   branch?: { name: string };
   tags?: { id: string; name: string }[];
 }
@@ -126,17 +130,17 @@ export default function AdminShopPage() {
     }
   };
 
-  useEffect(() => {
-    fetchShops();
-  }, [page, searchQuery, branchId, categoryId]);
-
-  const debouncedSearch = debounce((value: string) => {
-    router.push(
-      `/admin/shop?page=1&search=${encodeURIComponent(value)}${
-        branchId ? `&branchId=${branchId}` : ''
-      }${categoryId ? `&categoryId=${categoryId}` : ''}`
-    );
-  }, 300);
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((value: string) => {
+        router.push(
+          `/admin/shop?page=1&search=${encodeURIComponent(value)}${
+            branchId ? `&branchId=${branchId}` : ""
+          }${categoryId ? `&categoryId=${categoryId}` : ""}`
+        );
+      }, 300),
+    [branchId, categoryId, router]
+  );
 
   const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
@@ -217,7 +221,7 @@ export default function AdminShopPage() {
     });
   };
 
-  if (loading) return <Loading />;
+  {loading && <Loading />}
 
   return (
     <div className="bg-white p-4 rounded-lg flex-1 mr-4">
@@ -239,7 +243,7 @@ export default function AdminShopPage() {
           type="file"
           accept=".csv"
           onChange={handleCsvUpload}
-          className="border p-2 rounded-lg"
+          className="file-input"
         />
         <p className="text-sm text-gray-500 mt-1">
           รูปแบบ CSV: name,logoUrl,imageUrl,description,zone,location,categoryId,branchId
@@ -258,7 +262,7 @@ export default function AdminShopPage() {
             value={search}
             onChange={handleSearchInput}
             placeholder="ค้นหาชื่อร้าน..."
-            className="w-full px-3 py-2 border rounded-lg"
+            className="input mb-2"
           />
           <button
             type="submit"
@@ -334,7 +338,18 @@ export default function AdminShopPage() {
                 </td>
                 <td className="border px-3 py-2">{shop.name}</td>
                 <td className="border px-3 py-2">{shop.branch?.name || '-'}</td>
-                <td className="border px-3 py-2">{shop.category?.name || '-'}</td>
+                <td className="border px-3 py-2">
+                  {shop.category ? (
+                    <span
+                      className="px-2 py-1 rounded text-white text-xs"
+                      style={{ backgroundColor: shop.category.color || "#9dc93c" }}
+                    >
+                      {shop.category.name}
+                    </span>
+                  ) : (
+                    "-"
+                  )}
+                </td>
                 <td className="border px-3 py-2">
                   {shop.tags && shop.tags.length > 0 ? (
                     <div className="flex flex-wrap gap-1">

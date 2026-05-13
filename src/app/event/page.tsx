@@ -56,16 +56,10 @@ export default function EventList() {
   }
 
   return (
-    <div>
+    <div className="max-w-2xl mx-auto p-0 px-0 mb-20 md:mt-20 md:mb-0 mb-4 rounded-xl">
       <HeaderMobile />
-    
-      <div className="max-w-2xl mx-auto p-0 -mb-14 md:mt-0 md:mb-16 rounded-xl">
-        <div className="w-full md:pt-2 pt-16 px-10 md:px-20 md:pb-0">
-          <UserProfile showOn="mobile" />
-        </div>
-      </div>
 
-      <div className="relative max-w-2xl shadow-md mx-auto p-0 md:pt-0 pt-20 pb-4 mb-6 bg-white rounded-5xl rounded-b-xl">
+      <div className="relative max-w-2xl shadow-md mx-auto p-0 md:pt-0 pt-4 pb-4 md:mt-20 mt-44 mb-6 bg-white rounded-3xl rounded-b-xl">
 
         <div className="px-4 md:p-10 max-w-5xl mx-auto mb-6">
           <div className="flex flex-row justify-between mb-2">
@@ -140,13 +134,14 @@ export default function EventList() {
                     href={`/event/${r.id}`}
                     className={`w-full flex flex-col gap-4 p-4 border border-gray-200 rounded-xl shadow overflow-hidden transition bg-white h-full`}
                   >
-                  <div className="relative w-full rounded-xl overflow-hidden bg-white pt-125%">
+                  <div className="relative w-full rounded-xl overflow-hidden bg-white">
                     <Image
                       src={r.imageUrl || "/main/no-image.png"}
                       alt={r.name}
-                      fill
-                      className="object-cover"
-                      sizes="160px"
+                      width={300}
+                      height={300}
+                      className="object-cover w-full h-auto"
+                      unoptimized
                     />
                   </div>
 

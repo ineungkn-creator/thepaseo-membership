@@ -49,7 +49,7 @@ export default function AddRewardPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const resShops = await fetch("/api/admin/shop");
+        const resShops = await fetch("/api/admin/shop?take=9999");
         const dataShops = await resShops.json();
         setShops(Array.isArray(dataShops) ? dataShops : dataShops.shops || []);
 
@@ -130,7 +130,7 @@ export default function AddRewardPage() {
               onChange={(e) => {
                 if (e.target.files?.[0]) setFile(e.target.files[0]);
               }}
-              className="w-full"
+              className="file-input"
             />
           </div>
 
@@ -141,7 +141,7 @@ export default function AddRewardPage() {
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border rounded"
+            className="input"
           />
         </div>
 
@@ -151,7 +151,7 @@ export default function AddRewardPage() {
             type="text"
             value={linkShare}
             onChange={(e) => setlinkShare(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg"
+            className="input"
           />
         </div>
 
@@ -163,7 +163,7 @@ export default function AddRewardPage() {
               required
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-3 py-2 border rounded"
+              className="input"
             />
           </div>
           <div>
@@ -173,7 +173,7 @@ export default function AddRewardPage() {
               required
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-3 py-2 border rounded"
+              className="input"
             />
           </div>
         </div>
@@ -186,7 +186,7 @@ export default function AddRewardPage() {
               min={0}
               value={pointCost}
               onChange={(e) => setPointCost(Number(e.target.value))}
-              className="w-full px-3 py-2 border rounded"
+              className="input"
             />
           </div>
           <div>
@@ -196,7 +196,7 @@ export default function AddRewardPage() {
               min={0}
               value={pointEarn}
               onChange={(e) => setPointEarn(Number(e.target.value))}
-              className="w-full px-3 py-2 border rounded"
+              className="input"
             />
           </div>
           <div>
@@ -206,7 +206,7 @@ export default function AddRewardPage() {
               min={0}
               value={quantity}
               onChange={(e) => setQuantity(Number(e.target.value))}
-              className="w-full px-3 py-2 border rounded"
+              className="input"
             />
           </div>
           <div>
@@ -216,7 +216,7 @@ export default function AddRewardPage() {
               min={1}
               value={maxPerUser}
               onChange={(e) => setMaxPerUser(Number(e.target.value))}
-              className="w-full px-3 py-2 border rounded"
+              className="input"
             />
           </div>
         </div>
@@ -270,7 +270,7 @@ export default function AddRewardPage() {
             placeholder="🔍 ค้นหาร้านค้า..."
             value={shopSearch}
             onChange={(e) => setShopSearch(e.target.value)}
-            className="w-full px-3 py-2 border rounded mb-2"
+            className="input mb-2"
           />
 
           <select
@@ -284,7 +284,7 @@ export default function AddRewardPage() {
                 setSelectedShops(selected);
               }
             }}
-            className="w-full px-3 py-2 border rounded"
+            className="input"
           >
             {/* ✅ ตัวเลือกพิเศษ “จุดบริการ” */}
             <option value="redemption">🎁 จุดบริการ (Redemption)</option>

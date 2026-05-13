@@ -84,7 +84,7 @@ export default function BannerUploadPage() {
                     alt={banner.title}
                     width={600}
                     height={600}
-                    className="object-cover w-full h-60 rounded-xl"
+                    className="object-cover w-full rounded-xl"
                   />
                 </Link>
               </div>

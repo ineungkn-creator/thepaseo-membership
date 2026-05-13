@@ -35,12 +35,32 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const { id, status, rejectReason, amount, shopId, branchId } = await req.json();
+    const { id, status, rejectReason, amount, shopId, branchId, receiptNumber } = await req.json();
     if (!["APPROVED", "REJECTED"].includes(status)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
     const reviewedById = session.user.id;
+
+    const duplicate = await prisma.receipt.findFirst({
+      where: {
+        shopId,
+        receiptNumber,
+        NOT: {
+          id,
+        },
+        status: {
+          in: ["PENDING", "APPROVED"],
+        },
+      },
+    });
+
+    if (duplicate) {
+      return NextResponse.json(
+        { error: "เลขใบเสร็จนี้ถูกใช้แล้ว" },
+        { status: 400 }
+      );
+    }
 
     const receipt = await prisma.receipt.update({
       where: { id },
@@ -63,17 +83,9 @@ export async function PATCH(req: Request) {
         return NextResponse.json({ error: "Point setting not found" }, { status: 500 });
       }
 
-      const shop = await prisma.shop.findUnique({
-        where: { id: receipt.shopId! },
-      });
-
-      const rateAmount =
-        shop?.customRate ?? setting.receiptRateAmount;
-
-      const ratePoints = setting.receiptRatePoints || 1;
-
       const pointsToAdd =
-        Math.floor(receipt.amount / rateAmount) * ratePoints;
+        Math.floor(receipt.amount / setting.receiptRateAmount) *
+        setting.receiptRatePoints;
 
       // ⭐ คำนวณวันหมดอายุ
       let expiresAt: Date | null = null;
@@ -169,6 +181,9 @@ export async function POST(req: Request) {
     const amount = parseInt(formData.get("amount") as string, 10);
     const branchId = formData.get("branchId") as string;
     const shopId = formData.get("shopId") as string;
+    const receiptNumber = formData.get("receiptNumber") as string | null;
+    const receiptDate = formData.get("receiptDate") as string | null;
+    const receiptTime = formData.get("receiptTime") as string | null;
 
     if (!userId || !amount || !branchId || !shopId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -208,6 +223,9 @@ export async function POST(req: Request) {
         reviewedBy: reviewedById,
         branchId,
         shopId,
+        receiptNumber,
+        receiptDate: receiptDate ? new Date(receiptDate) : null,
+        receiptTime,
         ...(fileUrl && { fileUrl }),
         ...(fileType && { fileType }),
       },
@@ -231,17 +249,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const shop = await prisma.shop.findUnique({
-      where: { id: shopId },
-    });
-
-    const rateAmount =
-      shop?.customRate ?? setting.receiptRateAmount;
-
-    const ratePoints = setting.receiptRatePoints || 1;
-
     const pointsToAdd =
-      Math.floor(receipt.amount / rateAmount) * ratePoints;
+      Math.floor(receipt.amount / setting.receiptRateAmount) * setting.receiptRatePoints;
 
     let pointBalance = await prisma.pointBalance.findUnique({ where: { userId } });
     if (!pointBalance) {

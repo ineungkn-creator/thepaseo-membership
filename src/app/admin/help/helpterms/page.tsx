@@ -103,7 +103,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     placeholder="Email 1"
                     value={term.email1 || ""}
                     onChange={(e) => setTerm({ ...term, email1: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="input"
                   />
                 </div>
               </div>
@@ -112,11 +112,11 @@ const handleSubmit = async (e: React.FormEvent) => {
                 <label className="block mb-1 font-medium">อีเมล 2</label>
                 <div className="mt-2">
                   <input
-                type="email"
-                placeholder="Email 2"
-                value={term.email2 || ""}
-                onChange={(e) => setTerm({ ...term, email2: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg"
+                  type="email"
+                  placeholder="Email 2"
+                  value={term.email2 || ""}
+                  onChange={(e) => setTerm({ ...term, email2: e.target.value })}
+                  className="input"
               />
                 </div>
               </div>
@@ -129,7 +129,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     placeholder="Email 3"
                     value={term.email3 || ""}
                     onChange={(e) => setTerm({ ...term, email3: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="input"
                   />
                 </div>
               </div>
@@ -142,7 +142,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     placeholder="Phone 1"
                     value={term.phone1 || ""}
                     onChange={(e) => setTerm({ ...term, phone1: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="input"
                   />
                 </div>
               </div>
@@ -155,7 +155,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     placeholder="Phone 2"
                     value={term.phone2 || ""}
                     onChange={(e) => setTerm({ ...term, phone2: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="input"
                   />
                 </div>
               </div>
@@ -168,7 +168,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     placeholder="Phone 3"
                     value={term.phone3 || ""}
                     onChange={(e) => setTerm({ ...term, phone3: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="input"
                   />
                 </div>
               </div>

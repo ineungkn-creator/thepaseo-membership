@@ -82,21 +82,22 @@ export default function RewardCard() {
                     width={ 500 }
                     height={ 500 }
                     className="object-cover"
+                    unoptimized
                   />
                 </div>
 
                 {/* Meta */}
                 <div className="w-60% flex flex-col md:gap-2 gap-1">
 
-                  <p className="md:text-base text-sm leading-5 font-semibold">{reward.reward.name}</p>
+                  <p className="text-xs leading-5 font-semibold">{reward.reward.name}</p>
 
-                  <p className="md:text-sm text-xs text-gray-500 text-left">
+                  <p className="text-xs text-gray-500 text-left">
                       วันที่แลก:{" "}
                       {new Date(reward.joinedAt).toLocaleDateString("th-TH")}
                     </p>
 
                   {reward.reward.endDate && (
-                    <p className="md:text-sm text-xs text-gray-500 text-left">
+                    <p className="text-xs text-gray-500 text-left">
                       หมดอายุ:{" "}
                       {new Date(reward.reward.endDate).toLocaleDateString("th-TH")}
                     </p>

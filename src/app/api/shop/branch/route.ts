@@ -20,12 +20,24 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json(branches);
+    const baseUrl = process.env.STORAGE_BASE_URL;
+
+    const formatted = branches.map((b) => ({
+      ...b,
+      imageUrl:
+        b.imageUrl && !b.imageUrl.startsWith("http")
+          ? `${baseUrl}${b.imageUrl}`
+          : b.imageUrl,
+    }));
+
+    return NextResponse.json(formatted);
   } catch (error) {
     console.error("Error fetching branches:", error);
     return NextResponse.json(
       { error: "Failed to fetch branches" },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }

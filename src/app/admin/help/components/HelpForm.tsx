@@ -45,7 +45,7 @@ export default function HelpForm({
         <div className="sm:col-span-3">
             <Label className="block text-sm/6 font-medium text-gray-900">คำถาม / หัวข้อ</Label>
             <div className="mt-2">
-                <Input value={question} onChange={(e) => setQuestion(e.target.value)} />
+                <Input className="input" value={question} onChange={(e) => setQuestion(e.target.value)} />
             </div>
         </div>
 
@@ -63,6 +63,7 @@ export default function HelpForm({
                     type="number"
                     value={order}
                     onChange={(e) => setOrder(Number(e.target.value))}
+                    className="input"
                 />
             </div>
         </div>

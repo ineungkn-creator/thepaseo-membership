@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import ColorPicker from "@/components/ui/ColorPicker";
 
 export default function EditShopCategoryPage() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function EditShopCategoryPage() {
       name: "",
       slug: "",
       imageUrl: "",
+      color: "#9dc93c",
     },
   });
 
@@ -28,7 +30,10 @@ export default function EditShopCategoryPage() {
     async function fetchData() {
       const res = await fetch(`/api/admin/shop/category/${id}`);
       const data = await res.json();
-      form.reset(data);
+      form.reset({
+        ...data,
+        color: data.color || "#9dc93c",
+      });
     }
     if (id) fetchData();
   }, [id, form]);
@@ -68,6 +73,14 @@ export default function EditShopCategoryPage() {
     setUploading(false);
   };
 
+  const generateSlug = (text: string) => {
+    return text
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-");
+  };
+
   return (
     <div className="max-w-lg mx-auto p-6 bg-white rounded-xl shadow">
       <h1 className="text-2xl font-bold mb-4">แก้ไขหมวดหมู่ร้านค้า</h1>
@@ -76,7 +89,16 @@ export default function EditShopCategoryPage() {
         {/* Name */}
         <div>
           <label className="block text-sm font-medium mb-1">ชื่อหมวดหมู่</label>
-          <Input placeholder="ชื่อหมวดหมู่" {...form.register("name")} />
+          <Input
+            placeholder="ชื่อหมวดหมู่"
+            {...form.register("name")}
+            onChange={(e) => {
+              const name = e.target.value;
+              form.setValue("name", name);
+              form.setValue("slug", generateSlug(name));
+            }}
+            className="input"
+          />
           {form.formState.errors.name && (
             <p className="text-red-500 text-sm">{form.formState.errors.name.message}</p>
           )}
@@ -85,7 +107,7 @@ export default function EditShopCategoryPage() {
         {/* Slug */}
         <div>
           <label className="block text-sm font-medium mb-1">Slug</label>
-          <Input placeholder="slug" {...form.register("slug")} />
+          <Input className="input" placeholder="slug" {...form.register("slug")} />
           {form.formState.errors.slug && (
             <p className="text-red-500 text-sm">{form.formState.errors.slug.message}</p>
           )}
@@ -94,14 +116,14 @@ export default function EditShopCategoryPage() {
         {/* Image Upload */}
         <div>
           <label className="block text-sm font-medium mb-1">รูปภาพ</label>
-          <Input type="file" accept="image/*" onChange={handleUpload} />
+          <Input className="file-input" type="file" accept="image/*" onChange={handleUpload} />
           {uploading && <p className="text-sm text-gray-500">กำลังอัปโหลด...</p>}
 
           {form.watch("imageUrl") && (
             <Image
               width={600}
               height={600}
-              src={form.watch("imageUrl")}
+              src={form.watch("imageUrl") || "/images/no-image.png"}
               alt="preview"
               className="w-32 h-32 object-cover mt-2 rounded"
             />
@@ -111,6 +133,13 @@ export default function EditShopCategoryPage() {
             <p className="text-red-500 text-sm">{form.formState.errors.imageUrl.message}</p>
           )}
         </div>
+
+        <ColorPicker
+          value={form.watch("color")}
+          onChange={(color) =>
+            form.setValue("color", color, { shouldValidate: true })
+          }
+        />
 
         <Button type="submit" className="w-full">อัพเดต</Button>
       </form>

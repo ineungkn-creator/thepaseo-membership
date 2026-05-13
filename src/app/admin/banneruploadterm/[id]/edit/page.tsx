@@ -76,14 +76,14 @@ export default function BannerUploadTermEditPage() {
           <div className="sm:col-span-3">
             <label className="block text-sm/6 font-medium text-gray-900">ชื่อ Banner</label>
             <div className="mt-2">
-              <Input placeholder="ชื่อ" value={title} onChange={(e) => setTitle(e.target.value)} />
+              <Input className="input" placeholder="ชื่อ" value={title} onChange={(e) => setTitle(e.target.value)} />
             </div>
           </div>
 
           <div className="sm:col-span-3">
             <label className="block text-sm/6 font-medium text-gray-900">ลิงก์เมื่อกด</label>
             <div className="mt-2">
-            <Input placeholder="ลิงก์เมื่อกด" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} />
+            <Input className="input" placeholder="ลิงก์เมื่อกด" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} />
             </div>
           </div>
 
@@ -98,17 +98,17 @@ export default function BannerUploadTermEditPage() {
                 className="w-32 h-32 object-cover mb-2 rounded"
               />
             }
-            <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
+            <input className="file-input" type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
           </div>
 
           <div className="sm:col-span-3 flex flex-row gap-4">
             <div className="w-full">
               <label className="block text-sm/6 font-medium text-gray-900">เริ่มวันที่</label>
-              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              <Input className="input" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
             </div>
             <div className="w-full">
               <label className="block text-sm/6 font-medium text-gray-900">สิ้นสุดวันที่</label>
-              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              <Input className="input" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
             </div>
           </div>
 

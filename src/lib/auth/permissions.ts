@@ -20,6 +20,8 @@ import { MdCategory } from "react-icons/md";
 import { FaListCheck } from "react-icons/fa6";
 import { TbPresentationAnalytics } from "react-icons/tb";
 import { FaHashtag } from "react-icons/fa";
+import { FaUserEdit } from "react-icons/fa";
+import { RiAdminFill } from "react-icons/ri";
 
 import { Role } from "@prisma/client";
 
@@ -249,7 +251,8 @@ export const menuItems: MenuItem[] = [
         href: "/admin/users",
         roles: ["ADMIN", "ADMINMARKETING", "CRMMANAGEMENT", "STAFF"],
         subItems: [
-        { name: "ผู้ใช้ทั้งหมด", href: "/admin/users", roles: ["ADMIN", "CRMMANAGEMENT", "STAFF"],logo: FaBorderAll },
+        { name: "ลูกค้า", href: "/admin/users/customer", roles: ["ADMIN", "CRMMANAGEMENT", "STAFF"],logo: FaUserEdit },
+        { name: "แอดมิน", href: "/admin/users/admin", roles: ["ADMIN", "CRMMANAGEMENT", "STAFF"],logo: RiAdminFill },
         ],
     },
     {

@@ -67,7 +67,7 @@ export default function RewardDetailPage() {
     : false;
 
   return (
-    <>
+     <>
         <div className="relative max-w-2xl mx-auto p-0 pt-10 bg-gray-100 rounded-5xl shadow-md">
 
             {/* รหัส Redeem */}

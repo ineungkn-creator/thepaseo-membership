@@ -94,6 +94,7 @@ export default function EditBranchPage() {
             value={branch.name}
             onChange={(e) => setBranch({ ...branch, name: e.target.value })}
             placeholder="ชื่อสาขา"
+            className="input"
           />
         </div>
 
@@ -118,13 +119,14 @@ export default function EditBranchPage() {
             value={branch.location || ""}
             onChange={(e) => setBranch({ ...branch, location: e.target.value })}
             placeholder="เช่น ถ.สุขุมวิท กรุงเทพฯ"
+            className="input"
           />
         </div>
 
         {/* Image Upload */}
         <div>
           <label className="block text-sm font-medium mb-1">รูปภาพ</label>
-          <Input type="file" accept="image/*" onChange={handleUpload} />
+          <Input className="file-input" type="file" accept="image/*" onChange={handleUpload} />
           {uploading && (
             <p className="text-sm text-gray-500 mt-1">กำลังอัปโหลด...</p>
           )}

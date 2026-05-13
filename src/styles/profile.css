@@ -8,14 +8,14 @@
 .profile-card::before {
     content: "";
     z-index: 1;
-    position: absolute;
-    top: -300px;
-    right: -230px;
-    width: 500px;
-    height: 500px;
+    opacity: .8;
     border-radius: 100%;
-    background: linear-gradient(to right, #589564, #87C38F)!important;
-    opacity: 0.8;
+    width: 450px;
+    height: 450px;
+    position: absolute;
+    top: -250px;
+    right: -210px;
+    background: linear-gradient(to right, #589564, #87c38f) !important;
 }
 
 .profile-card-1, .profile-card-2 {

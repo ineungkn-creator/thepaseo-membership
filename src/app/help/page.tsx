@@ -118,11 +118,11 @@ export default function HelpPage() {
   if (loading) return <Loading />;
 
   return (
-    <div className="max-w-2xl mx-auto p-0 px-0 mb-20 md:mt-20 md:mb-0 mb-4 rounded-xl">
+    <div className="max-w-2xl mx-auto pt-20 p-10 px-0 mb-20 md:mt-0 md:mb-0 mb-4 rounded-xl">
           <HeaderMobile />
 
-      <div className="relative max-w-2xl mx-auto md:pt-6 pt-20 bg-white rounded-t-5xl rounded-b-lg shadow-md flex flex-col gap-4">
-        <div className="px-4 pb-10">
+      <div className="relative max-w-2xl mx-auto md:pt-6 pt-4 md:mt-0 mt-16 bg-white rounded-xl shadow-md flex flex-col gap-4">
+        <div className="md:px-10 px-4 pb-10">
 
           <h1 className="text-2xl font-bold mb-6 text-center">คำถามที่พบบ่อย / Help</h1>
 

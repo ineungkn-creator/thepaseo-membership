@@ -43,22 +43,22 @@ export default function NewBranchPage() {
       <div className="space-y-4">
         <div>
           <label>ชื่อสาขา</label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="ชื่อสาขา" />
+          <Input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="ชื่อสาขา" />
         </div>
 
         <div>
           <label>Slug</label>
-          <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="ชื่อภาษาอังกฤษ" />
+          <Input className="input" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="ชื่อภาษาอังกฤษ" />
         </div>
 
         <div>
           <label>ที่ตั้ง</label>
-          <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="เช่น ถ.สุขุมวิท" />
+          <Input className="input" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="เช่น ถ.สุขุมวิท" />
         </div>
 
         <div>
           <label>รูปภาพ</label>
-          <Input type="file" accept="image/*" onChange={handleUpload} />
+          <Input className="file-input" type="file" accept="image/*" onChange={handleUpload} />
           {uploading && <p className="text-sm text-gray-500">กำลังอัปโหลด...</p>}
           {imageUrl &&
             <Image

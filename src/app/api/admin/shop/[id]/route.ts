@@ -18,11 +18,20 @@ export async function GET(
       include: {
         category: true,
         branch: true,
+        hours: {
+          orderBy: {
+            dayOfWeek: "asc"
+          }
+        }
       },
     });
 
     if (!shop) {
       return NextResponse.json({ error: "Shop not found" }, { status: 404 });
+    }
+
+    if (shop.hours) {
+      shop.hours.sort((a, b) => a.dayOfWeek - b.dayOfWeek);
     }
 
     // Load tagRelations → tags
@@ -54,11 +63,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     logoUrl,
     imageUrl,
     description,
+    phone,
+    hours = [],
     zone,
     location,
     categoryId,
     branchId,
-    tags, // ⭐ รับ tagIds ตรงนี้
+    tags,
     customRate,
   } = body;
 
@@ -70,6 +81,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       logoUrl,
       imageUrl,
       description,
+      phone,
       zone,
       location,
       categoryId,
@@ -80,6 +92,22 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
           : Number(customRate),
     },
   });
+
+  await prisma.shopHour.deleteMany({
+    where: { shopId: id },
+  });
+
+  if (hours.length > 0) {
+    await prisma.shopHour.createMany({
+      data: hours.map((h:any) => ({
+        shopId: id,
+        dayOfWeek: h.dayOfWeek,
+        openTime: h.openTime,
+        closeTime: h.closeTime,
+        isClosed: h.isClosed,
+      })),
+    });
+  }
 
   // 2) clear existing tags
   await prisma.tagRelation.deleteMany({
@@ -121,9 +149,16 @@ export async function DELETE(
       where: { id },
     });
 
+    await prisma.shopHour.deleteMany({
+      where: { shopId: id },
+    });
+
     return NextResponse.json({ message: "Shop deleted" });
-  } catch (error) {
+  } catch (error:any) {
     console.error(error);
-    return NextResponse.json({ error: "Failed to delete shop" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to update shop", details: error.message },
+      { status: 500 }
+    );
   }
 }

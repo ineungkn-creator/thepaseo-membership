@@ -4,9 +4,9 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
-import { FaRegCalendarCheck } from "react-icons/fa";
+import { CiCalendar } from "react-icons/ci";
 import { CiBitcoin } from "react-icons/ci";
-import { PiDotsThreeOutlineLight } from "react-icons/pi";
+import { IoMdMore } from "react-icons/io";
 import BackButton from "@/components/BackButton/page";
 import Loading from "@/components/loading";
 import UserProfile from "@/components/UserProfile/page";
@@ -206,128 +206,157 @@ const handleClaim = async () => {
 
   // ✅ แสดงปุ่มตามสถานะ
   const renderButton = () => {
-    if (coupon.isExpired)
-      return <button disabled className="btn-disable">คูปองหมดอายุแล้ว</button>;
-    if (coupon.isFull)
-      return <button disabled className="btn-disable">คูปองหมดแล้ว</button>;
-    if (coupon.pointCost > pointBalance)
-      return (
-        <button disabled className="btn-disable">
-          แต้มไม่เพียงพอ (มี {pointBalance} / ต้องใช้ {coupon.pointCost})
-        </button>
-      );
-    if (coupon.maxPerUser && coupon.receivedCount >= coupon.maxPerUser)
-      return (
-        <button disabled className="btn-disable">
-          คุณรับครบแล้ว ({coupon.receivedCount}/{coupon.maxPerUser})
-        </button>
-      );
+    let disabled = false;
+    let message = "";
+    let showAction = true;
+
+    if (coupon.isExpired) {
+      disabled = true;
+      message = "คูปองหมดอายุแล้ว";
+      showAction = false;
+    } else if (coupon.isFull) {
+      disabled = true;
+      message = "คูปองหมดแล้ว";
+      showAction = false;
+    } else if (coupon.pointCost > pointBalance) {
+      disabled = true;
+      message = `แต้มไม่เพียงพอ`;
+    } else if (coupon.maxPerUser && coupon.receivedCount >= coupon.maxPerUser) {
+      disabled = true;
+      message = `คุณรับครบแล้ว (${coupon.receivedCount}/${coupon.maxPerUser})`;
+    }
 
     return (
-      <button
-        onClick={() => setShowConfirmModal(true)}
-        disabled={joining}
-        className="btn-main"
-      >
-        {joining ? "กำลังรับคูปอง..." : "รับคูปองนี้"}
-        {coupon.maxPerUser && (
-          <span className="text-xs block mt-1 text-gray-600 leading-none">
-            รับได้ {coupon.maxPerUser} ครั้ง / รับไปแล้ว {coupon.receivedCount} ครั้ง
-          </span>
+      <div className="flex flex-row justify-between items-center gap-4">
+        
+        {/* INFO */}
+        <div className="flex flex-col gap-1">
+          {coupon.maxPerUser && (
+            <span className="text-sm text-gray-600 leading-none">
+              รับได้ {coupon.maxPerUser} ครั้ง / รับไปแล้ว {coupon.receivedCount} ครั้ง
+            </span>
+          )}
+
+          <p className="text-sm text-black">
+            แต้มของคุณ: <b>{pointBalance}</b> พอยต์
+          </p>
+
+          {message && (
+            <span className="text-xs text-red-500">{message}</span>
+          )}
+        </div>
+
+        {/* BUTTON */}
+        {showAction && (
+          <button
+            onClick={() => setShowConfirmModal(true)}
+            disabled={disabled || joining}
+            className={`py-2 px-8 rounded-full ${
+              disabled ? "bg-gray-300" : "bg-paseo"
+            }`}
+          >
+            <span className="text-sm font-bold text-white">
+              {joining ? "กำลังรับคูปอง..." : "รับคูปองนี้"}
+            </span>
+          </button>
         )}
-      </button>
+      </div>
     );
   };
 
   return (
-      <div>
+      <div className="pt-16">
         <HeaderMobile />
-      
-        <div className="max-w-2xl mx-auto -mb-14 md:mt-20 md:-mb-16 pt-16  rounded-xl">
-          <div className="w-full px-10 md:pt-0 md:px-20 md:pb-0">
-            <UserProfile  />
-          </div>
-        </div>
+
         <div
           ref={captureRef}
-          className="capture relative max-w-2xl mx-auto md:pt-10 md:pb-0 pb-14 md:mb-10 pt-20 bg-gray-100 rounded-t-5xl rounded-b-xl flex flex-col  md:gap-6 gap-4"
+          className="capture relative max-w-2xl mx-auto md:pt-10 md:pb-0 pb-40 md:mb-10 pt-8 md:mt-6 mt-0 bg-white rounded-xl flex flex-col md:gap-6 gap-4"
         >
   
-          <div className="px-4 md:px-10">
+          <div className="px-8 md:px-10">
             {coupon.imageUrl && (
               <Image
                 width={600}
                 height={600}
                 src={coupon.imageUrl}
                 alt={coupon.name}
-                className="w-full h-full object-cover rounded-2xl shadow border border-gray-100"
+                className="w-full h-full object-cover rounded-xl"
+                unoptimized
               />
             )}
+
+            <div className="w-full flex flex-row justify-end px-4 py-2 items-center gap-4">
+              {session?.user?.id && (
+                <FavoriteButton
+                  targetId={coupon.id}
+                  targetType="COUPON"
+                  userId={session.user.id}
+                />
+              )}
+              
+              <ShareButton
+                title={coupon?.name || "Event"}
+                linkShare={coupon?.linkShare}
+              />
+
+              <button
+                onClick={handleCapture}
+              >
+                <IoMdMore size={24} />
+              </button>
+            </div>
           </div>
 
-          <div className="px-4 md:px-10">
-            <div className="flex flex-row justify-between align-start gap-4 bg-white md:p-6 p-4 rounded-2xl shadow border border-gray-100">
-              <div className="flex flex-col gap-3">
-                <h1 className="text-sm font-bold mb-2">{coupon.name}</h1>
+          <div className="px-8 md:px-10">
+            <div className="flex flex-row justify-between align-start px-6">
+              <h1 className="text-sm font-bold text-center">{coupon.name}</h1>
+            </div>
+          </div>
+
+          <div className="px-8 md:px-10">
+            <div className="flex flex-row justify-between align-start gap-4 bg-paseo-hover md:p-6 p-4 px-6 rounded-xl">
+              <div className="flex flex-col gap-2">
                 <div className="flex flex-row item-center align-center gap-4">
-                  <FaRegCalendarCheck size={24} />
-                  <p className="text-sm text-gray-500">
-                    ตั้งแต่ {start_day} - {end_day} {end_month_long} {end_year} นี้
+                  <CiCalendar size={24} />
+                  <p className="text-sm text-black">
+                    วันที่ {start_day} - {end_day} {end_month_long} {end_year} นี้
                   </p>
                 </div>
   
                 {coupon.pointCost > 0 && 
                 <div className="flex flex-row item-center align-center gap-4">
                   <CiBitcoin size={24} />
-                  <p className="text-sm text-gray-600">ค่าใช้จ่าย: {coupon.pointCost} พอยต์</p>
+                  <p className="text-sm text-black">ค่าใช้จ่าย: {coupon.pointCost} พอยต์</p>
                 </div>
                 }
   
                 {coupon.pointEarn > 0 && 
                 <div className="flex flex-row item-center align-center gap-4">
                   <CiBitcoin size={24} />
-                  <p className="text-sm text-gray-600">ผู้เข้าร่วมจะได้รับ: {coupon.pointEarn} พอยต์</p>
+                  <p className="text-sm text-black">ผู้เข้าร่วมจะได้รับ: {coupon.pointEarn} พอยต์</p>
                 </div>
                 }
   
                 <div className="flex flex-row item-center align-center gap-4">
                   <CiBitcoin size={24} />
-                  <p className="text-sm text-gray-600">
-                    แต้มของคุณ: <span className="font-semibold text-green-600">{pointBalance}</span> พอยต์
+                  <p className="text-sm text-black">
+                    แต้มของคุณ: {pointBalance} พอยต์
                   </p>
                 </div>
-              </div>
-  
-              <div className="flex flex-col items-center gap-2">
-                {session?.user?.id && (
-                  <FavoriteButton
-                    targetId={coupon.id}
-                    targetType="COUPON"
-                    userId={session.user.id}
-                  />
-                )}
-                <button
-                  onClick={handleCapture}
-                >
-                  <PiDotsThreeOutlineLight size={24} />
-                </button>
-                <ShareButton
-                  title={coupon?.name || "Event"}
-                  linkShare={coupon?.linkShare}
-                />
+                
               </div>
   
             </div>
             
           </div>
 
-        <div className="px-4 md:px-10">
-          <div className="flex flex-col justify-between align-start gap-4 bg-white md:p-6 p-4 rounded-2xl shadow border border-gray-100">
+        <div className="px-8 md:px-10">
+          <div className="flex flex-col justify-between align-start gap-4">
             {coupon.description && (
               <div className="mb-4">
-                <h3 className="text-sm font-semibold mb-2">รายละเอียด</h3>
+                <span className="text-base font-bold">รายละเอียด</span>
                 <div
-                  className="prose text-gray-700"
+                  className="text-sm prose text-gray-700"
                   dangerouslySetInnerHTML={{ __html: coupon.description }}
                 />
               </div>
@@ -335,9 +364,9 @@ const handleClaim = async () => {
 
             {coupon.terms && (
               <div className="mb-4">
-                <h3 className="text-lg font-semibold mb-2">เงื่อนไข</h3>
+                <span className="text-base font-bold">เงื่อนไข</span>
                 <div
-                  className="prose text-gray-700"
+                  className="text-sm prose text-gray-700"
                   dangerouslySetInnerHTML={{ __html: coupon.terms }}
                 />
               </div>
@@ -345,16 +374,16 @@ const handleClaim = async () => {
 
             {coupon.locationLabel && 
               <div className="mb-4">
-                <h3 className="text-lg font-bold mb-4">จุดแลกรับของราลวัล</h3>
-              <p className="text-gray-700">{coupon.locationLabel}</p>
+                <span className="text-base font-bold">จุดแลกรับของราลวัล</span>
+                <p className="text-sm text-gray-700">{coupon.locationLabel}</p>
               </div>
             }
-            </div>
-
           </div>
 
+        </div>
+
         {/* ✅ ปุ่มรับคูปอง */}
-        <div className="max-w-2xl mx-auto bg-white w-full p-4 pb-4 md:p-4 md:rounded-2xl rounded-t-2xl shadow-sm border border-gray-200">
+        <div className="md:relative md:bottom-0 md:border-0 md:rounded-xl fixed bottom-12 max-w-2xl mx-auto bg-white w-full p-4 pb-6 md:p-8 border">
           {renderButton()}
         </div>
 

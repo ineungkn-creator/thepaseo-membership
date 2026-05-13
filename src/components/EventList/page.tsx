@@ -59,8 +59,8 @@ export default function EventList({ shopId }: { shopId?: string }) { // ✅ เ�
 
   return (
     <div className="w-full p-0 max-w-5xl mx-auto mb-0">
-      <div className="flex flex-row items-center justify-between mb-4">
-        <h1 className="text-xl font-bold">กิจกรรม</h1>
+      <div className="flex flex-row items-end justify-between mb-3">
+        <span className="text-base font-bold">กิจกรรม</span>
         {!shopId && ( // ✅ ซ่อนปุ่ม “ดูทั้งหมด” เมื่ออยู่ในร้าน
           <Link href="/event" className="bg-gray-100 px-2 py-1 rounded-full border border-gray-20 text-xs">
             ดูทั้งหมด
@@ -86,7 +86,7 @@ export default function EventList({ shopId }: { shopId?: string }) { // ✅ เ�
 
           return (
             <div className=" relative w-full flex flex-col" key={r.id}>
-              <div className="absolute blur2 flex justify-center top-6 left-6 w-10 h-10 rounded-full shadow-sm border border-gray-200">
+              <div className="absolute blur2 flex justify-center top-2 left-2 w-10 h-10 rounded-full shadow-sm border border-gray-200">
                 {session?.user?.id && (
                   <FavoriteButton
                     targetId={r.id}
@@ -98,24 +98,25 @@ export default function EventList({ shopId }: { shopId?: string }) { // ✅ เ�
 
               <Link
                 href={`/event/${r.id}`}
-                className="w-full flex flex-row gap-4 p-4 border border-gray-200 rounded-xl shadow overflow-hidden transition bg-white h-full"
-              >
-                <div className="w-40%">
-                  <div className="relative w-full rounded-xl overflow-hidden bg-white pt-125%">
+                >
+                <div className="embla__slide__number_campaign bg-gray-100 border rounded-2xl transition flex items-stretch">
+                  <div className="w-40%">
                     <Image
                       src={r.imageUrl || "/main/no-image.png"}
                       alt={r.name}
-                      fill
-                      className="object-cover"
-                      sizes="160px"
+                      width={300}
+                      height={300}
+                      className="w-full h-full rounded-l-xl"
+                      unoptimized
                     />
                   </div>
-                </div>
 
-                <div className="w-60% flex flex-col">
+                <div className="flex flex-col w-60% p-4 gap-2 justify-between">
 
                   <div className="pt-1 flex flex-col flex-grow gap-2">
-                    <h3 className="text-sm md:text-base font-bold leading-5 tracking-wide truncate whitespace-nowrap">{r.name}</h3>
+                    <h3 className="text-xs font-semibold line-clamp-3 leading-4 text-start">
+                      {r.name.length > 40 ? r.name.substring(0, 40) + "..." : r.name}
+                    </h3>
                     <p className="text-xs md:text-sm text-gray-600 line-clamp-2 mb-2">
                       {startDate.getDate()} - {endDate.getDate()} {monthNames[endDate.getMonth()]} {endDate.getFullYear()}
                     </p>
@@ -140,6 +141,8 @@ export default function EventList({ shopId }: { shopId?: string }) { // ✅ เ�
                   </div>
 
                 </div>
+
+              </div>
 
                 
               </Link>

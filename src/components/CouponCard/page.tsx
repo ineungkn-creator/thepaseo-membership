@@ -79,20 +79,21 @@ export default function CouponCard() {
                     width={ 500 }
                     height={ 500 }
                     className="object-cover"
+                    unoptimized
                   />
                 </div>
 
                 <div className="w-60% flex flex-col md:gap-2 gap-1">
 
-                  <p className="md:text-base text-sm leading-5 font-semibold">{userCoupon.coupon.name}</p>
+                  <p className="text-xs leading-5 font-semibold">{userCoupon.coupon.name}</p>
 
-                  <p className="md:text-sm text-xs text-gray-500 text-left">
+                  <p className="text-xs text-gray-500 text-left">
                     หมดอายุ:{" "}
                     {new Date(userCoupon.coupon.expiresAt).toLocaleDateString("th-TH")}
                   </p>
 
                   <div className="w-full items-start text-center gap-1 mt-1 p-2 rounded-lg bg-gray-100 border">
-                    <p className="md:text-sm text-xs">{userCoupon.coupon.code}</p>
+                    <p className="text-xs">{userCoupon.coupon.code}</p>
                   </div>
                   
                   

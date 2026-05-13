@@ -20,6 +20,7 @@ module.exports = {
       },
       spacing: {
         '5rem': '5rem',
+        '18': "4.5rem",
         'my-custom-spacing': '5rem',
         '30': '8rem',
         '10%': '10%',

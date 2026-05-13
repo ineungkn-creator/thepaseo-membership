@@ -6,10 +6,10 @@ import useEmblaCarousel from "embla-carousel-react";
 import FavoriteButton from "@/components/FavoriteButton/page";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
-import { FaBorderAll } from "react-icons/fa6";
 import { RiCoupon2Line, RiCoupon5Line } from "react-icons/ri";
 import Loading from "@/components/loading";
 import { BsClipboardCheck } from "react-icons/bs";
+import { HiMiniSquares2X2 } from "react-icons/hi2";
 
 type PrivilegeItem = {
   id: string;
@@ -57,7 +57,10 @@ export default function PrivilegeCampaignList() {
         );
 
         // เพิ่ม “ทั้งหมด” ไว้ด้านหน้า
-        setBranches([{ id: "all", name: "ทั้งหมด" }, ...filteredBranches]);
+        setBranches([
+          ...filteredBranches,
+          { id: "all", name: "ทั้งหมด" },
+        ]);
 
       } catch (err: any) {
         setError("ไม่สามารถโหลดข้อมูลสาขาได้");
@@ -112,24 +115,36 @@ export default function PrivilegeCampaignList() {
 
   // ✅ Branch Tabs (Dynamic from API)
   const renderBranchTabs = () => (
-    <div className="w-100 flex flex-wrap gap-2 mb-4" role="tablist">
+    <div className="flex justify-center gap-4 mb-4" role="tablist">
       {branches.map((branch) => (
         <button
           key={branch.id}
           onClick={() =>
             setSelectedBranch(branch.id === "all" ? null : branch.id)
           }
-          className={`flex flex-col flex-1 py-2 px-1 w-20% rounded-xl items-center gap-1 transition hover:bg-paseo-hover ${
-            selectedBranch === branch.id || (!selectedBranch && branch.id === "all")
-              ? 'text-black bg-paseo-hover shadow border border-2 border-paseo-dark'
-              : 'text-black hover:text-gray-700 bg-gray-50 shadow'
-          }`}
+          className="flex flex-col items-center gap-3 transition h-full"
           aria-selected={selectedBranch === branch.id}
           role="tab"
         >
-          <div className="h-12 w-12 flex justify-center items-center">
+          {/* LOGO */}
+          <div
+            className={`w-20 h-20 p-2 aspect-square rounded-xl overflow-hidden flex items-center justify-center border transition
+              ${
+                selectedBranch === branch.id ||
+                (!selectedBranch && branch.id === "all")
+                  ? "bg-gray-50 border-paseo-dark"
+                  : "bg-white border-gray-200"
+              }`}
+            >
             {branch.id === "all" ? (
-              <FaBorderAll size={32} />
+              <Image
+                src="/icon/icon-all.png"
+                alt="all"
+                width={40}
+                height={40}
+                className="w-full h-full object-contain"
+                unoptimized
+              />
             ) : branch.imageUrl ? (
               <Image
                 src={
@@ -140,21 +155,27 @@ export default function PrivilegeCampaignList() {
                     : "/images/no-image.png"
                 }
                 alt={branch.name}
-                width={48}
-                height={48}
-                className="object-cover"
+                width={80}
+                height={80}
+                className="w-full h-full object-cover"
+                unoptimized
               />
             ) : (
               <Image
                 src="/images/no-image.png"
                 alt={branch.name}
-                width={48}
-                height={48}
-                className="object-cover"
+                width={80}
+                height={80}
+                className="w-full h-full object-cover"
+                unoptimized
               />
             )}
           </div>
-          <span className="text-xs md:text-sm">{branch.name}</span>
+
+          {/* NAME */}
+          <span className="text-xs md:text-sm font-semibold text-center leading-tight">
+            {branch.name}
+          </span>
         </button>
       ))}
     </div>
@@ -192,7 +213,8 @@ export default function PrivilegeCampaignList() {
                             height={600}
                             src={item.imageUrl}
                             alt={item.name}
-                            className="w-full h-48 md:h-64 object-cover rounded-l-2xl"
+                            className="w-full object-cover rounded-l-2xl"
+                            unoptimized
                           />
                           ) : (
                             <Image
@@ -201,10 +223,11 @@ export default function PrivilegeCampaignList() {
                               src='/main/no-image.png'
                               alt={item.name}
                               className="object-cover rounded-xl border bg-white p-6"
+                              unoptimized
                             />
                           )}
                       </div>
-                      <div className="flex flex-col flex-grow w-60% p-4 gap-4">
+                      <div className="flex flex-col flex-grow w-60% p-4 gap-2">
                         <h3 className="text-black text-base md:text-xl font-bold line-clamp-1">
                           {item.name}
                         </h3>
@@ -258,7 +281,7 @@ export default function PrivilegeCampaignList() {
             <p>ยังไม่มีอีเวนต์</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-1 md:grid-cols-3 auto-rows-fr">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-1 md:grid-cols-1 auto-rows-fr">
             {events.map((r) => {
               const startDate = new Date(r.startDate!);
               const endDate = new Date(r.endDate!);
@@ -292,8 +315,8 @@ export default function PrivilegeCampaignList() {
               const endDate_time = endDate.toLocaleTimeString("th-TH", timeOptions);
 
               return (
-                <div className="embla__slide_campaign relative w-full flex flex-col" key={r.id}>
-                  <div className="absolute blur flex justify-center top-8 left-8 w-10 h-10 rounded-full shadow-sm border border-gray-200">
+                <div className=" relative w-full flex flex-col" key={r.id}>
+                  <div className="absolute blur2 flex justify-center top-2 left-2 w-10 h-10 rounded-full shadow-sm border border-gray-200">
                     {session?.user?.id && (
                       <FavoriteButton
                         targetId={r.id}
@@ -302,44 +325,57 @@ export default function PrivilegeCampaignList() {
                       />
                     )}
                   </div>
-
+    
                   <Link
-                href={`/event/${r.id}`}
-                className="w-full flex flex-col gap-4 p-4 border border-gray-200 rounded-xl shadow overflow-hidden transition bg-white h-full"
-              >
-                <div className="w-full h-32">
-                  {r.imageUrl && (
-                    <Image
-                      width={600}
-                      height={600}
-                      src={r.imageUrl}
-                      alt={r.name}
-                      className="w-full h-full object-cover rounded-lg"
-                    />
-                  )}
-                </div>
+                    href={`/event/${r.id}`}
+                    >
+                    <div className="embla__slide__number_campaign bg-gray-100 border rounded-2xl transition flex items-stretch">
+                      <div className="w-40%">
+                        <Image
+                          src={r.imageUrl || "/main/no-image.png"}
+                          alt={r.name}
+                          width={300}
+                          height={300}
+                          className="w-full h-full rounded-l-xl"
+                          unoptimized
+                        />
+                      </div>
 
-                <div className="pt-1 flex flex-col flex-grow">
-                  <h3 className="text-xs font-bold line-clamp-1">{r.name}</h3>
-                  <p className="text-xs text-gray-600 line-clamp-2 mb-2">
-                    {startDate.getDate()} - {endDate.getDate()} {monthNames[endDate.getMonth()]} {endDate.getFullYear()}
-                  </p>
-                </div>
+                    <div className="flex flex-col w-60% p-4 gap-2 justify-between">
 
-                <button
-                  className={`py-1 w-full rounded-full text-sm md:text-base font-bold flex flex-row align-center justify-center items-center gap-2 hover:bg-paseo-hover hover:text-black ${
-                    status === "สิ้นสุดแล้ว"
-                      ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                      : "bg-paseo text-white"
-                  }`}
-                  disabled={status === "สิ้นสุดแล้ว"}
-                >
-                  <BsClipboardCheck size={20} />
-                  <span className="text-xs">
-                    {status === "สิ้นสุดแล้ว" ? "สิ้นสุดแล้ว" : "เข้าร่วมกิจกรรม"}
-                  </span>
-                </button>
-              </Link>
+                      <div className="pt-1 flex flex-col flex-grow gap-2">
+                        <h3 className="text-xs font-semibold line-clamp-3 leading-4 text-start">
+                          {r.name.length > 50 ? r.name.substring(0, 50) + "..." : r.name}
+                        </h3>
+                        <p className="text-xs md:text-sm text-gray-600 line-clamp-2 mb-2">
+                          {startDate.getDate()} - {endDate.getDate()} {monthNames[endDate.getMonth()]} {endDate.getFullYear()}
+                        </p>
+                      </div>
+
+                      <div className="px-4 md:px-8">
+
+                      <button
+                        className={`py-2 w-full rounded-full text-sm md:text-base font-bold flex flex-row align-center justify-center items-center gap-2 hover:bg-paseo-hover hover:text-black ${
+                          status === "สิ้นสุดแล้ว"
+                            ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                            : "bg-paseo text-white"
+                        }`}
+                        disabled={status === "สิ้นสุดแล้ว"}
+                      >
+                        <BsClipboardCheck size={20} />
+                        <span className="text-xs">
+                          {status === "สิ้นสุดแล้ว" ? "สิ้นสุดแล้ว" : "เข้าร่วมกิจกรรม"}
+                        </span>
+                      </button>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                    
+                  </Link>
                 </div>
               );
             })}
@@ -379,47 +415,83 @@ export default function PrivilegeCampaignList() {
     return (
       <div className="mb-8">
         <h2 className="text-lg font-bold mb-4">คูปองและรางวัล</h2>
-        <div className="flex gap-4 mb-4" role="tablist">
-          <button
-            onClick={() => setSelectedType("ALL")}
-            className={`flex flex-col py-2 px-4 w-20% rounded-xl flex items-center gap-1 hover:bg-paseo-hover ${
-              selectedType === "ALL"
-                ? 'text-black bg-paseo-hover shadow border border-2 border-paseo-dark'
-                : 'text-black hover:text-gray-700 bg-gray-50 shadow'
-            }`}
-            aria-selected={selectedType === "ALL"}
-            role="tab"
-          >
-            <FaBorderAll size={32} />
-            <span className="text-xs md:text-sm">ทั้งหมด</span>
-          </button>
-          <button
-            onClick={() => setSelectedType("COUPON")}
-            className={`flex flex-col py-2 px-4 w-20% rounded-xl flex items-center gap-1 hover:bg-paseo-hover ${
+        <div className="flex justify-start gap-4 mb-4" role="tablist">
+
+        {/* COUPON */}
+        <button
+          onClick={() => setSelectedType("COUPON")}
+          className="flex flex-col items-center gap-3 transition"
+          role="tab"
+        >
+          <div
+            className={`w-20 h-20 p-2 rounded-xl flex items-center justify-center border transition
+            ${
               selectedType === "COUPON"
-                ? 'text-black bg-paseo-hover shadow border border-2 border-paseo-dark'
-                : 'text-black hover:text-gray-700 bg-gray-50 shadow'
+                ? "bg-gray-50 border-paseo-dark"
+                : "bg-white border-gray-200"
             }`}
-            aria-selected={selectedType === "COUPON"}
-            role="tab"
           >
-            <RiCoupon5Line size={32} />
-            <span className="text-xs md:text-sm">คูปอง</span>
-          </button>
-          <button
-            onClick={() => setSelectedType("REWARD")}
-            className={`flex flex-col py-2 px-4 w-20% rounded-xl flex items-center gap-1 hover:bg-paseo-hover ${
+            <RiCoupon5Line size={36} className="text-paseo" />
+          </div>
+
+          <span className="text-xs md:text-sm font-semibold">
+            คูปอง
+          </span>
+        </button>
+
+
+        {/* REWARD */}
+        <button
+          onClick={() => setSelectedType("REWARD")}
+          className="flex flex-col items-center gap-3 transition"
+          role="tab"
+        >
+          <div
+            className={`w-20 h-20 p-2 rounded-xl flex items-center justify-center border transition
+            ${
               selectedType === "REWARD"
-                ? 'text-black bg-paseo-hover shadow border border-2 border-paseo-dark'
-                : 'text-black hover:text-gray-700 bg-gray-50 shadow'
+                ? "bg-gray-50 border-paseo-dark"
+                : "bg-white border-gray-200"
             }`}
-            aria-selected={selectedType === "REWARD"}
-            role="tab"
           >
-            <RiCoupon2Line size={32} />
-            <span className="text-xs md:text-sm">รางวัล</span>
-          </button>
-        </div>
+            <RiCoupon2Line size={36} className="text-paseo" />
+          </div>
+
+          <span className="text-xs md:text-sm font-semibold">
+            รางวัล
+          </span>
+        </button>
+
+        {/* ALL */}
+        <button
+          onClick={() => setSelectedType("ALL")}
+          className="flex flex-col items-center gap-3 transition"
+          role="tab"
+        >
+          <div
+            className={`w-20 h-20 p-2 rounded-xl flex items-center justify-center border transition
+            ${
+              selectedType === "ALL"
+                ? "bg-gray-50 border-paseo-dark"
+                : "bg-white border-gray-200"
+            }`}
+          >
+            <Image
+              src="/icon/icon-all.png"
+              alt="all"
+              width={40}
+              height={40}
+              className="w-full h-full object-contain"
+              unoptimized
+            />
+          </div>
+
+          <span className="text-xs md:text-sm font-semibold">
+            ทั้งหมด
+          </span>
+        </button>
+
+      </div>
         {displayedItems.length === 0 ? (
           <div className="p-6 text-center">
             <p>
@@ -468,44 +540,43 @@ export default function PrivilegeCampaignList() {
                     className="w-full h-full flex flex-row p-0 rounded-xl overflow-hidden transition"
                   >
                     <div className="relative w-full h-full flex flex-col shadow-lg">
-                      <div className="relative w-full h-full flex flex-col gap-2 p-4 pb-2 bg-gray-100 rounded-2xl ticket-notch">
-                        <div className="relative w-full rounded-xl overflow-hidden bg-white pt-125%">
+                      <div className="relative w-full h-full flex flex-col">
+                        <div className="w-full aspect-square rounded-xl overflow-hidden bg-white p-3 bg-gray-100">
                           <Image
                             src={r.imageUrl || "/main/no-image.png"}
                             alt={r.name}
-                            fill
-                            className="object-cover"
-                            sizes="160px"
+                            width={300}
+                            height={300}
+                            className="w-full h-full rounded-xl"
+                            unoptimized
                           />
                         </div>
 
-                        <div className="w-full" style={{ minHeight: "1.5rem" }}>
-                          <h3 className="text-xs font-medium line-clamp-2 leading-tight">{r.name}</h3>
-                        </div>
-                        <div className="w-full mt-auto">
-                          <p className="text-xs text-gray-600 line-clamp-1">
-                            {start_day} - {end_day} {end_month_long} {end_year}
-                          </p>
+                        <div className="w-full rounded-xl flex flex-col gap-2 bg-white p-2 bg-gray-100">
+
+                          <div className="w-full px-1" style={{ minHeight: "2rem" }}>
+                            <h3 className="text-xs font-semibold line-clamp-3 leading-4 text-center">
+                              {r.name.length > 40 ? r.name.substring(0, 40) + "..." : r.name}
+                            </h3>
+                          </div>
+
+                          <button
+                            className={`py-1 w-full rounded-full text-xs md:text-sm font-bold flex flex-row items-center justify-center gap-2 hover:text-black ${
+                              status === "สิ้นสุดแล้ว"
+                                ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                                : "bg-paseo text-white"
+                            }`}
+                            disabled={status === "สิ้นสุดแล้ว"}
+                          >
+                            {status === "สิ้นสุดแล้ว"
+                              ? "สิ้นสุดแล้ว"
+                              : Number(r.pointCost) === 0
+                              ? "รับสิทธิ์"
+                              : `${r.pointCost} พอยท์`}
+                          </button>
                         </div>
                       </div>
 
-                      <div className="w-full flex flex-col gap-2 p-4 bg-gray-100 rounded-b-2xl border-t-2 border-black border-dotted">
-                        <button
-                          className={`py-1 w-full rounded-full text-xs md:text-sm font-bold flex flex-row items-center justify-center gap-2 hover:text-black ${
-                            status === "สิ้นสุดแล้ว"
-                              ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                              : "bg-paseo text-white"
-                          }`}
-                          disabled={status === "สิ้นสุดแล้ว"}
-                        >
-                          <RiCoupon2Line size={20} />
-                          {status === "สิ้นสุดแล้ว"
-                            ? "สิ้นสุดแล้ว"
-                            : Number(r.pointCost) === 0
-                            ? "รับสิทธิ์"
-                            : `ใช้ ${r.pointCost} พอยท์`}
-                        </button>
-                      </div>
                     </div>
                   </Link>
                 </div>

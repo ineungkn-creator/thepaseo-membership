@@ -69,6 +69,7 @@ export default function ShopCategoryPage() {
               <th className="border px-3 py-2">รูป</th>
               <th className="border px-3 py-2">ชื่อ</th>
               <th className="border px-3 py-2">Slug</th>
+              <th className="border px-3 py-2">สี</th> {/* ⭐ เพิ่ม */}
               <th className="border px-3 py-2">จำนวนร้าน</th>
               <th className="border px-3 py-2">จัดการ</th>
             </tr>
@@ -124,8 +125,28 @@ export default function ShopCategoryPage() {
                     )}
                   </td>
 
-                  <td className="border px-3 py-2">{cat.name}</td>
+                  <td className="border px-3 py-2">
+                    <span
+                      className="px-2 py-1 rounded text-white text-xs"
+                      style={{ backgroundColor: cat.color }}
+                    >
+                      {cat.name}
+                    </span>
+                  </td>
                   <td className="border px-3 py-2">{cat.slug}</td>
+                  <td className="border px-3 py-2 text-center">
+                    {cat.color ? (
+                      <div className="flex justify-center items-center gap-2">
+                        <div
+                          className="w-6 h-6 rounded-full border"
+                          style={{ backgroundColor: cat.color }}
+                        />
+                        <span className="text-xs text-gray-500">{cat.color}</span>
+                      </div>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
                   <td className="border px-3 py-2 text-center">
                     {cat.shops.length}
                   </td>

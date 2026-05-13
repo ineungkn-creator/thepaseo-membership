@@ -82,6 +82,7 @@ export default function ReceiptTerms() {
                     handleUploadImage(e.target.files[0]);
                   }
                 }}
+                className="file-input"
               />
 
               <div className="grid grid-cols-4 gap-4 mt-4">

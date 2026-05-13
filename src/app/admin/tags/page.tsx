@@ -78,7 +78,7 @@ export default function TagManagementPage() {
       <input
         type="text"
         placeholder="ค้นหาแท็ก..."
-        className="w-full px-3 py-2 border rounded-lg mb-2"
+        className="input mb-2"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
@@ -88,7 +88,7 @@ export default function TagManagementPage() {
         <input
           type="text"
           placeholder={editTag ? "แก้ไขชื่อแท็ก" : "สร้างแท็กใหม่..."}
-          className="border px-4 py-2 rounded-lg flex-1"
+          className="input"
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
         />

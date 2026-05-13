@@ -2,12 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname } from "next/navigation";
-import Link from "next/link";
 import Image from "next/image";
-import GreenCard from '@/components/GreenCard/page';
+import Link from "next/link";
 
-import { RiCoupon2Fill } from "react-icons/ri";
-import { TbCoinBitcoinFilled } from "react-icons/tb";
+import { IoTicketOutline } from "react-icons/io5";
+import { MdControlPoint } from "react-icons/md";
 
 interface CouponData {
   id: string;
@@ -33,15 +32,13 @@ interface UserProfileData {
   branch?: { name: string };
   residenceType?: string;
   address: string;
-  //houseNumber?: string;
-  //alley?: string;
   subDistrict?: string;
   district?: string;
   postalCode?: string;
   avatar?: string;
   point: number;
-  unusedCouponCount: number;
-  coupons: CouponData[]; // Changed from 'coupon: number' to 'coupons: CouponData[]'
+  activeCouponCount: number;
+  coupons: CouponData[];
   totalSpending: number;
   referralCode: string;
   referredBy?: string;
@@ -225,32 +222,27 @@ const Navbar = () => {
 
               <div className="flex flex-row justify-between gap-2">
                 <div className="z-10 flex flex-row text-center items-center gap-2 bg-white p-1 border border-gray-100 rounded-lg shadow-lg">
-                  <Link className=" flex flex-row items-center gap-2 text-lg font-semibold" href="/profile/point">
-                    <div className="md:pr-2 pr-2 border-r border-gray-400">
-                      <TbCoinBitcoinFilled className='text-paseo' size={16}/>
-                    </div>
+                  <Link className="w-full flex flex-row items-center gap-2 text-lg font-semibold" href="/profile/point">
+                    <MdControlPoint className='text-black' size={24} />
 
-                    <div className="flex flex-row justify-center items-center w-full">
-                      <span className="text-xs font-semibold text-black">
-                        {user.point} 
-                        <span className="text-xs font-semibold text-black"> พอยท์</span>
+                    <div className="flex flex-col justify-center items-start w-full gap-1">
+                      <span className="text-xs leading-none font-medium text-black">พอยท์</span>
+                      <span className="text-xs leading-none font-semibold text-black">
+                        {user.point.toLocaleString()} พอยท์
                       </span>
                     </div>
-                    
                     
                   </Link>
                 </div>
 
                 <div className="z-10 flex flex-row text-center items-center gap-2 bg-white p-1 border border-gray-100 rounded-lg shadow-lg">
-                  <Link className=" flex flex-row items-center gap-2 text-lg font-semibold" href="/profile/coupon">
-                    <div className="md:pr-2 pr-2 border-r border-gray-400">
-                      <RiCoupon2Fill className='text-paseo' size={16} />
-                    </div>
+                  <Link className="w-full flex flex-row items-center gap-2 text-lg font-semibold" href="/profile/coupon">
+                    <IoTicketOutline className='text-black' size={24} />
 
-                    <div className="flex flex-row justify-center items-center w-full">
-                      <span className="text-xs font-semibold text-black">
-                        {user.unusedCouponCount} 
-                        <span className="text-xs font-semibold text-black"> คูปอง</span>
+                    <div className="flex flex-col justify-center items-start w-full gap-1">
+                      <span className="text-xs leading-none font-medium text-black">คูปอง</span>
+                      <span className="text-xs leading-none font-semibold text-black">
+                        {user.activeCouponCount} ใบ
                       </span>
                     </div>
                     
@@ -264,19 +256,21 @@ const Navbar = () => {
                   href="/profile"
                   className="w-full"
                 >
-                  
-                  {avatarUrl ? (
-                    <Image
-                      src={avatarUrl}
-                      alt={`${user.name}'s avatar`}
-                      width={36}
-                      height={36}
-                      priority
-                      className="rounded-full object-cover shadow-sm w-14 h-14 md:w-18 md:h-18 border border-gray-300 shadow"
-                    />
-                    ) : (
-                      <Image className="text-white" priority={true} src="/uploads/admin/navbar/icon_profile.svg" alt="Thepaseo" width={36} height={36} />
-                    )}
+                  <div className="w-12 h-12 picture-section flex flex-row justify-center">
+                    {avatarUrl ? (
+                      <Image
+                        src={avatarUrl}
+                        alt={`${user.name}'s avatar`}
+                        width={36}
+                        height={36}
+                        priority
+                          className="rounded-full object-cover shadow-sm w-12 h-12"
+                          unoptimized
+                      />
+                      ) : (
+                        <img className="text-white" src="/uploads/admin/navbar/icon_profile.svg" alt="Thepaseo" width={36} height={36} />
+                      )}
+                    </div>
                 </Link>
               </div>
             </div>
@@ -285,7 +279,7 @@ const Navbar = () => {
       </nav>
       
       {/* Mobile Bottom Menu */}
-      <nav className="md:hidden bg-white overflow-hidden fixed bottom-0 left-0 right-0 text-black rounded-t-xl shadow-sm border border-gray-200" style={{ zIndex:'49'}}>
+      <nav className="md:hidden bg-white overflow-hidden fixed bottom-0 left-0 right-0 text-black rounded-t-xl shadow-sm border border-gray-200" style={{ zIndex:'51'}}>
         <div className="flex justify-around p-1">
           {menuItemsMobile.map((item) => {
             const isActive = isActivePath(item.path);

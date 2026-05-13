@@ -3,15 +3,27 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const branchId = searchParams.get("branchId");
+
     const categories = await prisma.shopCategory.findMany({
       select: {
         id: true,
         name: true,
         imageUrl: true,
+        color: true,
         _count: {
-          select: { shops: true },
+          select: {
+            shops: branchId
+              ? {
+                  where: {
+                    branchId: branchId,
+                  },
+                }
+              : true,
+          },
         },
       },
       orderBy: {
@@ -21,8 +33,11 @@ export async function GET() {
 
     return NextResponse.json(categories);
   } catch (error) {
-    console.error('Error fetching categories:', error);
-    return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 });
+    console.error("Error fetching categories:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch categories" },
+      { status: 500 }
+    );
   } finally {
     await prisma.$disconnect();
   }

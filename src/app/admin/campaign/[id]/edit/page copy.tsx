@@ -110,7 +110,7 @@ export default function EditCampaignPage() {
             type="text"
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            className="w-full px-3 py-2 border rounded"
+            className="input"
             required
           />
         </div>
@@ -121,7 +121,7 @@ export default function EditCampaignPage() {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border rounded"
+            className="input"
             required
           />
         </div>
@@ -131,7 +131,7 @@ export default function EditCampaignPage() {
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full px-3 py-2 border rounded"
+            className="input"
           />
         </div>
 
@@ -140,13 +140,13 @@ export default function EditCampaignPage() {
           <textarea
             value={terms}
             onChange={(e) => setTerms(e.target.value)}
-            className="w-full px-3 py-2 border rounded"
+            className="input"
           />
         </div>
 
         <div>
           <label className="block mb-1 font-medium">รูปภาพ</label>
-          <input type="file" accept="image/*" onChange={handleImageChange} />
+          <input className="file-input" type="file" accept="image/*" onChange={handleImageChange} />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -156,7 +156,7 @@ export default function EditCampaignPage() {
               type="datetime-local"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-3 py-2 border rounded"
+              className="input"
             />
           </div>
           <div>
@@ -165,7 +165,7 @@ export default function EditCampaignPage() {
               type="datetime-local"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-3 py-2 border rounded"
+              className="input"
             />
           </div>
         </div>
@@ -177,7 +177,7 @@ export default function EditCampaignPage() {
               type="number"
               value={pointCost}
               onChange={(e) => setPointCost(parseInt(e.target.value || "0"))}
-              className="w-full px-3 py-2 border rounded"
+              className="input"
             />
           </div>
           <div>
@@ -186,7 +186,7 @@ export default function EditCampaignPage() {
               type="number"
               value={pointEarn}
               onChange={(e) => setPointEarn(parseInt(e.target.value || "0"))}
-              className="w-full px-3 py-2 border rounded"
+              className="input"
             />
           </div>
         </div>
@@ -200,7 +200,7 @@ export default function EditCampaignPage() {
               onChange={(e) =>
                 setQuantity(e.target.value ? parseInt(e.target.value) : null)
               }
-              className="w-full px-3 py-2 border rounded"
+              className="input"
             />
           </div>
           <div>
@@ -211,7 +211,7 @@ export default function EditCampaignPage() {
               onChange={(e) =>
                 setMaxPerUser(e.target.value ? parseInt(e.target.value) : null)
               }
-              className="w-full px-3 py-2 border rounded"
+              className="input"
             />
           </div>
         </div>
@@ -252,7 +252,7 @@ export default function EditCampaignPage() {
             onChange={(e) =>
               setSelectedShops(Array.from(e.target.selectedOptions, (o) => o.value))
             }
-            className="w-full px-3 py-2 border rounded"
+            className="input"
           >
             {shops.map((s) => (
               <option key={s.id} value={s.id}>

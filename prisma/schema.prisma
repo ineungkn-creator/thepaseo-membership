@@ -31,6 +31,7 @@ model ShopCategory {
   name      String
   slug      String   @unique
   imageUrl  String?
+  color     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   sortOrder Int      @default(0)
@@ -43,6 +44,7 @@ model Shop {
   logoUrl     String?
   imageUrl    String?
   description String?
+  phone       String?
   zone        String?
   location    String?
   categoryId  String?
@@ -58,8 +60,26 @@ model Shop {
   event       Event[]       @relation("EventShops")
   rewards     Reward[]      @relation("RewardShops")
 
+  hours       ShopHour[]
+
   @@index([branchId], map: "Shop_branchId_fkey")
   @@index([categoryId], map: "Shop_categoryId_fkey")
+}
+
+model ShopHour {
+  id        String   @id @default(uuid())
+
+  shopId    String
+  shop      Shop     @relation(fields: [shopId], references: [id])
+
+  dayOfWeek Int
+
+  openTime  String
+  closeTime String
+
+  isClosed  Boolean  @default(false)
+
+  @@index([shopId])
 }
 
 model Branch {
@@ -359,6 +379,11 @@ model Receipt {
   reviewedBy        String?
   reviewedAt        DateTime?
   createdAt         DateTime           @default(now())
+
+  receiptNumber   String?      // เลขที่ใบเสร็จ
+  receiptDate     DateTime?    // วันที่บนใบเสร็จ
+  receiptTime     String?      // เวลาในใบเสร็จ (บางร้านไม่มี)
+  
   branchId          String?
   shopId            String?
   fileType          String?
@@ -374,6 +399,7 @@ model Receipt {
   @@index([branchId], map: "Receipt_branchId_fkey")
   @@index([reviewedBy], map: "Receipt_reviewedBy_fkey")
   @@index([shopId], map: "Receipt_shopId_fkey")
+  @@index([shopId, receiptNumber])
 }
 
 model UploadTerm {

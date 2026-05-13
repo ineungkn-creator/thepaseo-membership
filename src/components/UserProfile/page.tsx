@@ -5,8 +5,8 @@ import GreenCard from '@/components/GreenCard/page';
 import { HiUserCircle } from "react-icons/hi2";
 import Image from "next/image";
 import Link from 'next/link';
-import { RiCoupon2Fill } from "react-icons/ri";
-import { TbCoinBitcoinFilled } from "react-icons/tb";
+import { IoTicketOutline } from "react-icons/io5";
+import { MdControlPoint } from "react-icons/md";
 import Loading from '@/components/loading';
 
 // Define the structure for a single coupon
@@ -66,6 +66,24 @@ const getAvatarUrl = (avatar?: string) => {
   return `/user/profile/${avatar}`;
 };
 
+export function formatPhone(phone?: string) {
+  if (!phone) return "";
+
+  const cleaned = phone.replace(/\D/g, "");
+
+  // เบอร์มือถือ 10 หลัก
+  if (cleaned.length === 10 && cleaned.startsWith("0")) {
+    return cleaned.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3");
+  }
+
+  // เบอร์บ้าน 9 หลัก
+  if (cleaned.length === 9) {
+    return cleaned.replace(/(\d{2})(\d{3})(\d{4})/, "$1-$2-$3");
+  }
+
+  return phone;
+}
+
 export default function UserProfile({ showOn = "mobile" }: Props) {
   const [user, setUser] = useState<UserProfileData | null>(null);
 
@@ -96,91 +114,82 @@ export default function UserProfile({ showOn = "mobile" }: Props) {
   const avatarUrl = getAvatarUrl(user.avatar);
 
   return (
-  <div className={visibilityClass}>
-    <GreenCard title="โปรไฟล์ของคุณ">
-      <div className="flex flex-col gap-2">
-        <div className="flex justify-between w-full gap-2">
-          <div className="w-50% z-10 flex flex-row text-center items-center gap-2 bg-white p-1 border border-gray-100 rounded-lg shadow-lg">
-            <Link className="w-full flex flex-row items-center gap-1 text-lg font-semibold" href="/profile/point">
-              <div className="md:pr-4 pr-2 border-r border-gray-400">
-                <TbCoinBitcoinFilled className='text-paseo' size={20}/>
-              </div>
+    <div className={visibilityClass}>
+      <GreenCard title="โปรไฟล์ของคุณ">
+        <div className="flex flex-col gap-2">
+          
+          <div className="profile-card w-full text-white rounded-xl shadow-sm md:p-4 px-3 py-3 mb:p-6 gap-0 border border-gray-300 shadow-lg flex flex-row">
 
-              <div className="flex flex-row justify-center items-center w-full">
-                <span className="text-xs leading-none font-semibold text-black">
-                  {user.point} 
-                  <span className="text-xs leading-none font-semibold text-black"> พอยท์</span>
-                </span>
-              </div>
-              
-              
-            </Link>
-          </div>
+              <div className="flex flex-col item-center gap-1 z-10">
 
-          <div className="w-50% z-10 flex flex-row text-center items-center gap-2 bg-white p-1 border border-gray-100 rounded-lg shadow-lg">
-            <Link className="w-full flex flex-row items-center gap-1 text-lg font-semibold" href="/profile/coupon">
-              <div className="md:pr-4 pr-2 border-r border-gray-400">
-                <RiCoupon2Fill className='text-paseo' size={20} />
-              </div>
-
-              <div className="flex flex-row justify-center items-center w-full">
-                <span className="text-xs leading-none font-semibold text-black">
-                  {user.activeCouponCount} 
-                  <span className="text-xs leading-none font-semibold text-black"> คูปอง</span>
-                </span>
-              </div>
-              
-            </Link>
-          </div>
-        </div>
-              
-              <div className="profile-card w-full text-white rounded-xl shadow-sm md:p-4 p-2 mb:p-6 gap-2 border border-gray-300 shadow-lg flex flex-row gap-4">
-
-                  <div className="z-10 w-30% flex flex-col item-center gap-2">
-
-                      <div className="w-full picture-section flex flex-row justify-center">
-                        {avatarUrl ? (
-                          <Image
-                            src={avatarUrl}
-                            alt={`${user.name}'s avatar`}
-                            width={72}
-                            height={72}
-                            priority
-                            className="rounded-full object-cover shadow-sm w-16 h-16 md:w-20 md:h-20 border border-gray-300 shadow"
-                          />
-                        ) : (
-                            <HiUserCircle size={72} className="bg-white text-paseo rounded-full" />
-                        )}
-                      </div>
-                      
-                  </div>
-      
-                  <div className="z-10 w-70% flex flex-col gap-1">
-
-                    <div className="w-full flex flex-col">
-                        <p className="text-base font-semibold">{user.name}</p>
-                    </div>
-
-                    <div className="w-full flex flex-row gap-2">
-
-                      <div className="w-50% flex flex-col">
-                        <p className="text-xs leading-1 font-bold underline underline-offset-1">เบอร์โทรศัพท์​</p>
-                        <p className="text-sm leading-none">{user.phone}</p>
-                      </div>
-
-                      <div className="w-50% flex flex-col">
-                        <p className="text-xs leading-1 font-bold underline underline-offset-1">วันเกิด</p>
-                        <p className="text-sm leading-none">{user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString("th-TH") : "-"}</p>
-                      </div>
-
-                    </div>
-
+                  <div className="w-20 h-20 picture-section flex flex-row justify-center">
+                    {avatarUrl ? (
+                      <Image
+                        src={avatarUrl}
+                        alt={`${user.name}'s avatar`}
+                        width={72}
+                        height={72}
+                        priority
+                        className="rounded-full object-cover shadow-sm w-20 h-20 md:w-20 md:h-20"
+                        unoptimized
+                      />
+                    ) : (
+                        <HiUserCircle size={72} className="bg-white text-paseo rounded-full" />
+                    )}
                   </div>
                   
               </div>
+
+              <div className="w-full flex flex-col gap-3 z-10 ">
+
+                <div className="w-full flex flex-col ml-2">
+                  <p className="text-xl font-semibold">{user.name}</p>
+                  <div className="w-full flex flex-row items-center gap-2">
+                    <p className="text-xs font-medium leading-none">เบอร์โทรศัพท์</p>
+                    <p className="text-xs font-semibold leading-none">
+                      {formatPhone(user.phone)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex justify-between w-full gap-3">
+                  <div className="w-50% z-10 flex flex-row text-center items-center gap-2 bg-white p-1 border border-gray-100 rounded-lg shadow-lg">
+                    <Link className="w-full flex flex-row items-center gap-2 text-lg font-semibold" href="/profile/point">
+                      <MdControlPoint className='text-black' size={24} />
+
+                      <div className="flex flex-col justify-center items-start w-full gap-1">
+                        <span className="text-xs leading-none font-medium text-black">พอยท์</span>
+                        <span className="text-xs leading-none font-semibold text-black">
+                          {user.point.toLocaleString()} พอยท์
+                        </span>
+                      </div>
+                      
+                      
+                    </Link>
+                  </div>
+
+                  <div className="w-50% z-10 flex flex-row text-center items-center gap-2 bg-white p-1 border border-gray-100 rounded-lg shadow-lg">
+                    <Link className="w-full flex flex-row items-center gap-2 text-lg font-semibold" href="/profile/coupon">
+                      <IoTicketOutline className='text-black' size={24} />
+
+                      <div className="flex flex-col justify-center items-start w-full gap-1">
+                        <span className="text-xs leading-none font-medium text-black">คูปอง</span>
+                        <span className="text-xs leading-none font-semibold text-black">
+                          {user.activeCouponCount} ใบ
+                        </span>
+                      </div>
+                      
+                    </Link>
+                  </div>
+                </div>
+
+              </div>
+              
           </div>
 
-    </GreenCard>
-  </div>
+        </div>
+
+      </GreenCard>
+    </div>
   );
 }

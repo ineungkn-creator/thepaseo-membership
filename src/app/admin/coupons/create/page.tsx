@@ -49,7 +49,7 @@ export default function CreateCouponPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const resShops = await fetch("/api/admin/shop");
+        const resShops = await fetch("/api/admin/shop?take=9999");
         const dataShops = await resShops.json();
         setShops(Array.isArray(dataShops) ? dataShops : dataShops.shops || []);
 
@@ -136,14 +136,14 @@ export default function CreateCouponPage() {
           {/* ✅ รูปภาพ */}
           <div>
             <label className="block mb-1 font-medium">รูป</label>
-            <input type="file" accept="image/*" onChange={handleFileChange} />
+            <input className="file-input" type="file" accept="image/*" onChange={handleFileChange} />
             {preview && (
               <Image
                 width={600}
                 height={600}
                 src={preview}
                 alt="preview"
-                className="w-full mt-2 rounded-lg"
+                className="input"
               />
             )}
           </div>
@@ -156,7 +156,7 @@ export default function CreateCouponPage() {
               value={code}
               onChange={(e) => setCode(e.target.value)}
               placeholder="Coupon Code"
-              className="w-full mt-2 rounded-lg"
+              className="input"
             />
           </div>
 
@@ -167,7 +167,7 @@ export default function CreateCouponPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Coupon Name"
-              className="w-full border p-2 rounded-lg"
+              className="input"
               required
             />
           </div>
@@ -191,7 +191,7 @@ export default function CreateCouponPage() {
                 type="number"
                 value={pointCost}
                 onChange={(e) => setPointCost(Number(e.target.value))}
-                className="w-full border p-2 rounded-lg"
+                className="input"
               />
             </div>
             <div>
@@ -200,7 +200,7 @@ export default function CreateCouponPage() {
                 type="number"
                 value={pointEarn}
                 onChange={(e) => setPointEarn(Number(e.target.value))}
-                className="w-full border p-2 rounded-lg"
+                className="input"
               />
             </div>
           </div>
@@ -215,7 +215,7 @@ export default function CreateCouponPage() {
                 onChange={(e) =>
                   setQuantity(e.target.value ? Number(e.target.value) : null)
                 }
-                className="w-full border p-2 rounded-lg"
+                className="input"
               />
             </div>
             <div>
@@ -226,7 +226,7 @@ export default function CreateCouponPage() {
                 onChange={(e) =>
                   setMaxPerUser(e.target.value ? Number(e.target.value) : null)
                 }
-                className="w-full border p-2 rounded-lg"
+                className="input"
               />
             </div>
           </div>
@@ -239,7 +239,7 @@ export default function CreateCouponPage() {
                 type="datetime-local"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full border p-2 rounded-lg"
+                className="input"
               />
             </div>
             <div>
@@ -248,7 +248,7 @@ export default function CreateCouponPage() {
                 type="datetime-local"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full border p-2 rounded-lg"
+                className="input"
               />
             </div>
           </div>
@@ -259,7 +259,7 @@ export default function CreateCouponPage() {
               type="datetime-local"
               value={expiresAt}
               onChange={(e) => setExpiresAt(e.target.value)}
-              className="w-full border p-2 rounded-lg"
+              className="input"
             />
           </div>
 
@@ -276,7 +276,7 @@ export default function CreateCouponPage() {
           <select
             value={campaignId || ""}
             onChange={(e) => setCampaignId(e.target.value || null)}
-            className="w-full border p-2 rounded-lg"
+            className="input"
           >
             <option value="">-- เลือก Campaign (ถ้ามี) --</option>
             {campaigns.map((c) => (
@@ -324,7 +324,7 @@ export default function CreateCouponPage() {
               placeholder="🔍 ค้นหาร้านค้า..."
               value={shopSearch}
               onChange={(e) => setShopSearch(e.target.value)}
-              className="w-full border p-2 rounded-lg mb-2"
+              className="input mb-2"
             />
 
             <select
@@ -335,7 +335,7 @@ export default function CreateCouponPage() {
                   Array.from(e.target.selectedOptions, (option) => option.value)
                 )
               }
-              className="w-full border p-2 rounded-lg"
+              className="input"
             >
               {/* ✅ ตัวเลือกพิเศษ Redemption */}
               <option value="redemption">🎁 จุดบริการ (Redemption)</option>

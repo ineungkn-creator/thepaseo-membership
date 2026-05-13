@@ -26,8 +26,18 @@ export async function GET(request: Request) {
       orderBy: { name: "asc" },
     });
 
+    const baseUrl = process.env.STORAGE_BASE_URL;
 
-    return NextResponse.json(shops);
+    const formatted = shops.map((s) => ({
+      ...s,
+      logoUrl:
+        s.logoUrl && !s.logoUrl.startsWith("http")
+          ? `${baseUrl}${s.logoUrl}`
+          : s.logoUrl,
+    }));
+
+
+    return NextResponse.json(formatted);
   } catch (error: any) {
     console.error("Error fetching shops:", error);
     return NextResponse.json(

@@ -69,7 +69,7 @@ export default function CouponDetailPage() {
 
   return (
     <>
-        <div className="relative max-w-2xl mx-auto p-0 pt-10 bg-gray-100 rounded-5xl shadow-md">
+        <div className="relative max-w-2xl mx-auto p-0 pt-10 bg-gray-100 rounded-3xl shadow-md">
 
           <div className="px-4 pt-0 md:px-10 md:pt-0">
             <div className="bg-gray-50 border rounded-xl p-4 text-center">

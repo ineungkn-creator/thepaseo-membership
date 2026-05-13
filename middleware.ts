@@ -6,7 +6,6 @@ export const runtime = "nodejs";
 export async function middleware(req: any) {
   const { pathname } = req.nextUrl;
 
-  // ข้ามเส้นทางที่ไม่ต้องตรวจสอบ
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
@@ -17,10 +16,8 @@ export async function middleware(req: any) {
     return NextResponse.next();
   }
 
-  // อ่าน token จาก JWT (รองรับ Edge Runtime)
   const token = await getToken({ req });
 
-    // ไม่ได้ล็อกอิน → ส่งไปหน้า login
   if (!token) {
     if (pathname.startsWith("/admin")) {
       return NextResponse.redirect(new URL("/admin-login", req.nextUrl.origin));
@@ -47,7 +44,8 @@ export async function middleware(req: any) {
     }
   }
 
-  return NextResponse.redirect(new URL("/auth/login", req.nextUrl.origin));
+  // ✅ ต้อง next
+  return NextResponse.next();
 }
 
 export const config = {

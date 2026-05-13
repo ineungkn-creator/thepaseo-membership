@@ -10,8 +10,10 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
 
+    const takeParam = searchParams.get("take");
+
+    const pageSize = takeParam ? parseInt(takeParam) : 20;
     const page = parseInt(searchParams.get("page") || "1");
-    const pageSize = 20;
     const skip = (page - 1) * pageSize;
 
     const search = searchParams.get("search")?.trim() || undefined;
@@ -113,11 +115,13 @@ export async function POST(request: Request) {
       logoUrl,
       imageUrl,
       description,
+      phone,
+      hours = [],
       zone,
       location,
       categoryId,
       branchId,
-      tags = [], // ⭐ รับ tagIds ตรงนี้
+      tags = [],
       customRate,
     } = body;
 
@@ -128,6 +132,10 @@ export async function POST(request: Request) {
         logoUrl: logoUrl || null,
         imageUrl: imageUrl || null,
         description: description || null,
+        phone: phone || null,
+        hours: {
+          create: hours
+        },
         zone: zone || null,
         location: location || null,
         categoryId: categoryId || null,

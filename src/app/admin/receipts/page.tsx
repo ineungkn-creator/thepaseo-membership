@@ -29,6 +29,9 @@ type Receipt = {
   createdAt: string
   shopId?: string | null
   branchId?: string | null
+  receiptNumber?: string | null
+  receiptDate?: string | null
+  receiptTime?: string | null
 }
 
 type ShopBranchOption = {
@@ -51,7 +54,13 @@ export default function AdminReceiptsPage() {
   const [expandedReceiptId, setExpandedReceiptId] = useState<string | null>(null)
   const [shopBranches, setShopBranches] = useState<ShopBranchOption[]>([])
   const [shopQuery, setShopQuery] = useState("")
-  const [editing, setEditing] = useState<{ amount?: number; selectedShopId?: string }>({})
+  const [editing, setEditing] = useState<{ 
+    amount?: number
+    selectedShopId?: string
+    receiptNumber?: string
+    receiptDate?: string
+    receiptTime?: string
+  }>({})
   const [actionLoading, setActionLoading] = useState(false)
   const [userHistory, setUserHistory] = useState<Record<string, Receipt[]>>({})
 
@@ -74,6 +83,29 @@ export default function AdminReceiptsPage() {
       setLoading(false)
     }
   }
+
+  const checkReceipt = async (receiptNumber: string) => {
+    if (!receiptNumber || !editing.selectedShopId) return;
+
+    const [shopId] = editing.selectedShopId.split("__");
+
+    const res = await fetch("/api/admin/receipts/check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        receiptNumber,
+        shopId,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.duplicate) {
+      alert(
+        `⚠ เลขใบเสร็จนี้ถูกใช้แล้ว\n\nผู้ใช้: ${data.data.user?.name}\nเบอร์: ${data.data.user?.phone}`
+      );
+    }
+  };
 
   async function fetchUserHistory(userId: string) {
     try {
@@ -128,6 +160,9 @@ export default function AdminReceiptsPage() {
           status: payload.status,
           rejectReason: payload.rejectReason ?? null,
           amount: payload.amount ? Number(payload.amount) : null,
+          receiptNumber: payload.receiptNumber ?? null,
+          receiptDate: payload.receiptDate ?? null,
+          receiptTime: payload.receiptTime ?? null,
           shopId: payload.shopId ?? null,
           branchId: payload.branchId ?? null,
         }),
@@ -191,14 +226,14 @@ export default function AdminReceiptsPage() {
 
       // ✅ สร้างข้อความยืนยัน
       const confirmMsg = `
-  ⚡ ยืนยันอนุมัติใบเสร็จ ⚡
+        ⚡ ยืนยันอนุมัติใบเสร็จ ⚡
 
-  ชื่อ: ${user?.name || "-"}
-  เบอร์โทร: ${user?.phone || "-"}
-  จำนวนเงิน: ${amountValue.toLocaleString("th-TH")} บาท
-  จะได้รับพอยท์: ${pointsToAdd.toLocaleString("th-TH")} พอยท์
+        ชื่อ: ${user?.name || "-"}
+        เบอร์โทร: ${user?.phone || "-"}
+        จำนวนเงิน: ${amountValue.toLocaleString("th-TH")} บาท
+        จะได้รับพอยท์: ${pointsToAdd.toLocaleString("th-TH")} พอยท์
 
-  ต้องการอนุมัติใบเสร็จนี้หรือไม่?
+        ต้องการอนุมัติใบเสร็จนี้หรือไม่?
       `.trim();
 
       const confirmed = window.confirm(confirmMsg);
@@ -211,6 +246,10 @@ export default function AdminReceiptsPage() {
         amount: editing.amount,
         shopId,
         branchId,
+
+        receiptNumber: editing.receiptNumber,
+        receiptDate: editing.receiptDate,
+        receiptTime: editing.receiptTime,
       });
 
       alert(`✅ อนุมัติสำเร็จ\nผู้ใช้ได้รับ ${pointsToAdd} พอยท์`);
@@ -324,16 +363,53 @@ export default function AdminReceiptsPage() {
                             </div>
                             {/* editing form */}
                             <div className="w-full flex flex-col gap-3 bg-white p-4 rounded-xl shadow">
+                              <label className="text-sm font-medium">เลขที่ใบเสร็จ</label>
+                              <input
+                                className="input"
+                                value={ed.receiptNumber ?? ""}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+
+                                  setEditing((s) => ({
+                                    ...s,
+                                    receiptNumber: value,
+                                  }));
+
+                                  checkReceipt(value);
+                                }}
+                              />
+
                               <label className="text-sm font-medium">จำนวนเงิน</label>
                               <input
                                 type="number"
-                                className="border rounded p-2 w-full"
+                                className="input"
                                 value={ed.amount ?? ""}
                                 onChange={(e) => setEditing((s) => ({ ...s, amount: Number(e.target.value) }))}
                               />
+
+                              <label className="text-sm font-medium">วันที่ในใบเสร็จ</label>
+                              <input
+                                type="date"
+                                className="input"
+                                value={ed.receiptDate ?? new Date().toISOString().split("T")[0]}
+                                onChange={(e) =>
+                                  setEditing((s) => ({ ...s, receiptDate: e.target.value }))
+                                }
+                              />
+
+                              <label className="text-sm font-medium">เวลาในใบเสร็จ</label>
+                              <input
+                                type="time"
+                                className="input"
+                                value={ed.receiptTime ?? ""}
+                                onChange={(e) =>
+                                  setEditing((s) => ({ ...s, receiptTime: e.target.value }))
+                                }
+                              />
+
                               <label className="text-sm font-medium">เลือกร้าน / สาขา</label>
                               <input
-                                className="border rounded p-2 w-full mb-2"
+                                className="input"
                                 placeholder="ค้นหาร้านหรือสาขา..."
                                 value={shopQuery}
                                 onChange={(e) => setShopQuery(e.target.value)}
@@ -399,10 +475,13 @@ export default function AdminReceiptsPage() {
                               <div className="mt-6 border-t pt-4">
                                 <h2 className="font-bold mb-2">📜 ประวัติการส่งใบเสร็จ</h2>
                                 {userHistory[r.userId || ""] ? (
-                                  <table className="w-full border text-sm">
+                                  <table className="w-full border text-xs">
                                     <thead>
                                       <tr className="bg-gray-100">
-                                        <th className="border px-2 py-1">วันที่</th>
+                                        <th className="border px-2 py-1">วันที่อัปโหลด</th>
+                                        <th className="border px-2 py-1">เลขใบเสร็จ</th>
+                                        <th className="border px-2 py-1">วันที่ใบเสร็จ</th>
+                                        <th className="border px-2 py-1">เวลา</th>
                                         <th className="border px-2 py-1">ร้านค้า</th>
                                         <th className="border px-2 py-1">สาขา</th>
                                         <th className="border px-2 py-1">จำนวนเงิน</th>
@@ -414,6 +493,21 @@ export default function AdminReceiptsPage() {
                                       {userHistory[r.userId || ""].map((h) => (
                                         <tr key={h.id}>
                                           <td className="border px-2 py-1">{formatDate(h.createdAt)}</td>
+
+                                          <td className="border px-2 py-1">
+                                            {(h as any).receiptNumber || "-"}
+                                          </td>
+
+                                          <td className="border px-2 py-1">
+                                            {(h as any).receiptDate
+                                              ? new Date((h as any).receiptDate).toLocaleDateString("th-TH")
+                                              : "-"}
+                                          </td>
+
+                                          <td className="border px-2 py-1">
+                                            {(h as any).receiptTime || "-"}
+                                          </td>
+
                                           <td className="border px-2 py-1">{(h as any).shop?.name || "-"}</td>
                                           <td className="border px-2 py-1">{(h as any).branch?.name || "-"}</td>
                                           <td className="border px-2 py-1">{h.amount}</td>

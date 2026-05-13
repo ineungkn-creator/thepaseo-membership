@@ -246,9 +246,23 @@ export default function CompleteProfilePage() {
   return (
     <div className="max-w-lg mx-auto md:py-6 py-4 pb-0 rounded-xl relative">
 
-        <HeaderMobile showBack={false} />
+        <div className="fixed inset-x-0 top-0 overflow-hidden pt-2 pb-2 md:hidden z-50 blur2 rounded-b-xl shadow-sm border border-gray-200 flex flex-col">
+          <div className="relative flex flex-row justify-center">
 
-        <div className="md:pt-4 pt-14 mb-0 py-4 px-4 md:px-4">
+            <div className="flex flex-row justify-center gap-2 h-min">
+              <Image
+                src="/logo.png"
+                alt="Thepaseo"
+                width={40}
+                height={40}
+                unoptimized
+              />
+            </div>
+    
+          </div>
+        </div>
+
+        <div className="md:pt-4 pt-10 mb-0 py-4 px-4 md:px-4">
           <BannerRegister />
         </div>
 

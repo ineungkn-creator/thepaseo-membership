@@ -2,12 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
 html, body {
-  background-color: #9DC93C;
   overscroll-behavior-y: auto;
 }
 
@@ -28,7 +28,7 @@ html, body {
   --slide-height: 16rem;
   --slide-spacing: 1rem;
   --slide-size: 60%;
-  --slide-height-campaign: 12rem;
+  --slide-height-campaign: auto;
   --slide-height-coupon: 10rem;
   --slide-size-campaign: 100%;
   --slide-height-reward: 16rem;
@@ -265,7 +265,7 @@ li {
   border: 1px solid #b9bac0;
   box-shadow: 0 2px 6px #00000029;
   font-weight: 500;
-  background: linear-gradient(360deg, #93949d 0%, #b9bac0 50%, #eeeef0 90%, #767681 100%);
+  background: #eeeef0;
 }
 
 
@@ -278,4 +278,84 @@ li {
     flex: 0 0 var(--slide-size-mb-coupon);
   }
   
+}
+
+
+.input{
+  width:100%;
+  background:#fafafa;
+  border:1px solid #e2e8f0;
+  padding:10px;
+  border-radius:8px;
+  font-size:14px;
+  transition: all .15s ease;
+}
+
+.input:focus{
+  outline:none;
+  border-color: #9DC93C;
+  box-shadow: 0 0 0 2px color-mix(in srgb, #9DC93C 20%, transparent);
+}
+
+.input_time{
+  width:100%;
+  background:#fafafa;
+  border:1px solid #e2e8f0;
+  padding:10px;
+  border-radius:8px;
+  font-size:14px;
+  transition: all .15s ease;
+}
+
+.input_time:focus{
+  outline:none;
+  border-color: #9DC93C;
+  box-shadow: 0 0 0 2px color-mix(in srgb, #9DC93C 20%, transparent);
+}
+
+.file-input {
+  position: relative;
+  width: 100%;
+  padding: 14px;
+  border: 2px dashed #9DC93C;
+  border-radius: 10px;
+  background: #fafafa;
+  cursor: pointer;
+  transition: all .2s ease;
+  font-size: 14px;
+}
+
+.file-input:hover {
+  border-color: #6d8d2b;
+  background: #f5f5f5;
+}
+
+.file-input::file-selector-button {
+  background:#9DC93C;
+  color:#fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  margin-right: 12px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background .2s ease;
+}
+
+.file-input::file-selector-button:hover {
+  background: #333;
+}
+
+/* optional: when file selected */
+
+.file-input.has-file {
+  border-color: #16a34a;
+  background: #f0fdf4;
+}
+
+/* drag effect */
+
+.file-input.dragover {
+  border-color: #2563eb;
+  background: #eff6ff;
 }

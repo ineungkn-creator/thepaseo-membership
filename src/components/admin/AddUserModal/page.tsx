@@ -1,6 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { Button } from "@/components/ui/button"
+import { CalendarIcon } from "lucide-react"
+import ThaiAddressSelect from '@/components/address/ThaiAddressSelect'
+import { format } from "date-fns"
+import { th } from "date-fns/locale"
+import FormField from '@/components/form/FormField'
+import SimpleSelect from '@/components/form/SimpleSelect'
+import OtpVerifyModal from "@/components/auth/OtpVerifyModal";
+
 
 interface Branch {
   id: string;
@@ -30,15 +42,13 @@ interface UserForm {
   occupation: string;
   residenceType: string;
   address: string;
-  //houseNumber: string;
-  //alley: string;
   subDistrict: string;
   district: string;
   province: string;
   postalCode: string;
   branchId: string;
   referralCode: string;
-  interests: string[]; // ✅ กำหนดชัดว่าเป็น array ของ string
+  interests: string[];
   password: string;
   role: string;
 }
@@ -60,6 +70,10 @@ export default function AddUserModal({
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [countdown, setCountdown] = useState(0);
 
+  const [opendate, setOpenDate] = useState(false)
+  const [date, setDate] = useState<Date | undefined>(undefined)
+  const [phoneError, setPhoneError] = useState("");
+
   const [form, setForm] = useState<UserForm>({
     name: initialData?.name || "",
     dateOfBirth: initialData?.dateOfBirth?.split("T")[0] || "",
@@ -69,8 +83,6 @@ export default function AddUserModal({
     occupation: initialData?.occupation || "",
     residenceType: initialData?.residenceType || "",
     address: initialData?.address || "",
-    //houseNumber: initialData?.houseNumber || "",
-    //alley: initialData?.alley || "",
     subDistrict: initialData?.subDistrict || "",
     district: initialData?.district || "",
     province: initialData?.province || "",
@@ -83,32 +95,46 @@ export default function AddUserModal({
   });
 
   useEffect(() => {
-    if (initialData) {
-      setForm({
-        ...form,
-        name: initialData.name || "",
-        dateOfBirth: initialData.dateOfBirth?.split("T")[0] || "",
-        gender: initialData.gender || "",
-        phone: initialData.phone || "",
-        email: initialData.email || "",
-        occupation: initialData.occupation || "",
-        residenceType: initialData.residenceType || "",
-        address: initialData.address || "",
-        //houseNumber: initialData.houseNumber || "",
-        //alley: initialData.alley || "",
-        subDistrict: initialData.subDistrict || "",
-        district: initialData.district || "",
-        province: initialData.province || "",
-        postalCode: initialData.postalCode || "",
-        branchId: initialData.branchId || "",
-        referralCode: initialData.referralCode || "",
-        interests: initialData.interests?.map((i: any) => i.id) || [],
-        role: initialData.role || form.role,
-      });
-      if (initialData.phone) setIsOtpVerified(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!initialData) return;
+
+    const dob = initialData.dateOfBirth
+      ? new Date(initialData.dateOfBirth)
+      : undefined;
+
+    setForm((prev) => ({
+      ...prev,
+      name: initialData.name || "",
+      dateOfBirth: dob ? format(dob, "yyyy-MM-dd") : "",
+      gender: initialData.gender || "",
+      phone: initialData.phone || "",
+      email: initialData.email || "",
+      occupation: initialData.occupation || "",
+      residenceType: initialData.residenceType || "",
+      address: initialData.address || "",
+      subDistrict: initialData.subDistrict || "",
+      district: initialData.district || "",
+      province: initialData.province || "",
+      postalCode: initialData.postalCode || "",
+      branchId: initialData.branchId || "",
+      referralCode: initialData.referralCode || "",
+      interests: initialData.interests?.map((i: any) => i.id) || [],
+      role: initialData.role || prev.role,
+    }));
+
+    // ⭐ สำคัญ: sync ให้ Calendar แสดงวันที่เดิม
+    setDate(dob);
+
+    // OTP ถือว่าผ่านแล้วถ้ามีเบอร์
+    setIsOtpVerified(!!initialData.phone);
   }, [initialData]);
+
+  const handleDateChange = (selectedDate: Date | undefined) => {
+    setDate(selectedDate)
+    setForm({
+      ...form,
+      dateOfBirth: selectedDate ? format(selectedDate, "yyyy-MM-dd") : "",
+    })
+  }
 
   useEffect(() => {
     const loadData = async () => {
@@ -124,8 +150,14 @@ export default function AddUserModal({
 
   if (!open) return null;
 
-  const handleChange = (e: any) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = async (e: any) => {
+    const { name, value } = e.target;
+
+    setForm({ ...form, [name]: value });
+
+    if (name === "phone" && value.length === 10) {
+      await checkDuplicate();
+    }
   };
 
   const toggleInterest = (id: string) => {
@@ -139,17 +171,27 @@ export default function AddUserModal({
 
   // OTP
   const handleSendOtp = async () => {
+
     if (!/^0[689]\d{8}$/.test(form.phone)) {
       alert("กรุณากรอกเบอร์โทรให้ถูกต้อง");
       return;
     }
 
-    const res = await fetch("/api/auth/send-otp", {
+    // ✅ ตรวจเบอร์ก่อน
+    const phoneCheck = await fetch(`/api/admin/users/check-phone?phone=${form.phone}`);
+    const phoneData = await phoneCheck.json();
+
+    if (!phoneCheck.ok) {
+      alert(phoneData.error);
+      return;
+    }
+
+    // ส่ง OTP
+    const res = await fetch("/api/auth/register/send-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        phone: form.phone,
-        purpose: "REGISTER",
+        phone: form.phone
       }),
     });
 
@@ -193,6 +235,27 @@ export default function AddUserModal({
     setOtp("");
   };
 
+  const checkDuplicate = async () => {
+    const res = await fetch("/api/users/check-duplicate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: form.email,
+        phone: userType === "USER" ? form.phone : undefined,
+        excludeUserId: isEdit ? initialData?.id : undefined,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setPhoneError(data.error);
+      return false;
+    }
+
+    setPhoneError("");
+    return true;
+  };
 
   const handleSubmit = async () => {
     if (userType === "USER" && !isOtpVerified) {
@@ -201,25 +264,45 @@ export default function AddUserModal({
     }
 
     try {
+      const baseUrl =
+        userType === "ADMIN"
+          ? "/api/admin/users/admin"
+          : "/api/admin/users/customer";
+
       const url =
-        mode === "edit" ? `/api/admin/users?id=${initialData?.id}` : "/api/admin/users";
+        mode === "edit"
+          ? `${baseUrl}/${initialData?.id}`
+          : baseUrl;
+
       const method = mode === "edit" ? "PATCH" : "POST";
+
+      const payload: any = {
+        ...form,
+        name: `${form.name}`,
+        role: userType === "ADMIN" ? form.role : "USER",
+      };
+
+      if (!payload.password) {
+        delete payload.password;
+      }
+
+      if (!(await checkDuplicate())) return;
 
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          role: userType === "ADMIN" ? form.role : "USER",
-        }),
+        body: JSON.stringify(payload),
       });
+
       const data = await res.json();
 
       if (!res.ok) return alert(data.error || "บันทึกข้อมูลไม่สำเร็จ");
 
       alert(isEdit ? "✅ แก้ไขข้อมูลสำเร็จ" : "✅ เพิ่มผู้ใช้สำเร็จ");
+
       onSuccess();
       onClose();
+
     } catch (err) {
       console.error(err);
       alert("เกิดข้อผิดพลาดในการบันทึก");
@@ -242,197 +325,240 @@ export default function AddUserModal({
 
         {/* OTP Modal */}
         {showOtpModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-md p-4 w-80 text-center">
-              <h3 className="font-semibold mb-3">กรอกรหัส OTP</h3>
-              <input
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                maxLength={6}
-                className="border rounded p-2 w-full text-center tracking-widest"
-              />
-              <div className="mt-2 flex justify-between items-center text-sm">
-                <button
-                  disabled={countdown > 0}
-                  onClick={handleSendOtp}
-                  className="text-green-600 underline disabled:text-gray-400"
-                >
-                  {countdown > 0 ? `ขอ OTP อีกครั้ง (${countdown}s)` : "ขอ OTP ใหม่"}
-                </button>
-                <button
-                  onClick={() => setShowOtpModal(false)}
-                  className="text-gray-500 underline"
-                >
-                  ปิด
-                </button>
-              </div>
-              <button
-                onClick={handleVerifyOtp}
-                className="bg-green-500 text-white w-full py-2 rounded mt-3"
-              >
-                ยืนยัน OTP
-              </button>
-            </div>
-          </div>
+          <OtpVerifyModal
+            open={showOtpModal}
+            phone={form.phone}
+            onClose={() => setShowOtpModal(false)}
+            onVerified={() => {
+              setIsOtpVerified(true);
+              setShowOtpModal(false);
+            }}
+          />
         )}
 
-        <form className="flex flex-col gap-3">
+        <form className="flex flex-col gap-1">
           {userType === "ADMIN" ? (
             <>
-              <input
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="ชื่อ"
-                className="border rounded p-2"
-              />
-              <input
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="Email"
-                type="email"
-                className="border rounded p-2"
-              />
-              <input
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                placeholder="รหัสผ่าน"
-                type="password"
-                className="border rounded p-2"
-              />
-              <select
-                value={form.role}
-                onChange={(e) => setForm({ ...form, role: e.target.value })}
-                className="border rounded p-2"
-              >
-                <option value="">เลือก Role</option>
-                <option value="ADMIN">ADMIN</option>
-                <option value="ADMINMARKETING">ADMINMARKETING</option>
-                <option value="CRMMANAGEMENT">CRMMANAGEMENT</option>
-                <option value="STAFF">STAFF</option>
-              </select>
+              
+              <div className='flex flex-row gap-2'>
+                  <FormField label="ชื่อ" required>
+                    <Input
+                      type="text"
+                      placeholder="ชื่อ"
+                      name="firstName"
+                      className="w-full pt-6 pb-4 pl-2 pr-4 border rounded-xl bg-white focus:outline-none focus:ring focus:ring-paseo text-xs"
+                      onChange={handleChange}
+                      value={form.name}
+                      required
+                    />
+                  </FormField>
+                </div>
+                <FormField label="อีเมล" required>
+                  <Input
+                    type="email"
+                    placeholder="อีเมล"
+                    name="email"
+                    className="w-full pt-6 pb-4 pl-2 pr-4 border rounded-xl bg-white focus:outline-none focus:ring focus:ring-paseo text-xs"
+                    onChange={handleChange}
+                    value={form.email}
+                    required
+                  />
+                </FormField>
+
+                <FormField
+                  label={isEdit ? "รหัสผ่านใหม่ (ถ้าไม่แก้ ปล่อยว่าง)" : "รหัสผ่าน"}
+                  required={!isEdit}
+                >
+                  <Input
+                    type="password"
+                    placeholder={isEdit ? "••••••••" : "รหัสผ่าน"}
+                    name="password"
+                    className="w-full pt-6 pb-4 pl-2 pr-4 border rounded-xl bg-white focus:outline-none focus:ring focus:ring-paseo text-xs"
+                    onChange={handleChange}
+                    value={form.password}
+                  />
+                </FormField>
+
+                <FormField label="Role" required>
+                  <SimpleSelect
+                    value={form.role}
+                    onChange={(v) => setForm({ ...form, role: v })}
+                    options={[
+                      { value: 'ADMIN', label: 'ADMIN' },
+                      { value: 'ADMINMARKETING', label: 'ADMINMARKETING' },
+                      { value: 'CRMMANAGEMENT', label: 'CRMMANAGEMENT' },
+                      { value: 'STAFF', label: 'STAFF' },
+                    ]}
+                  >
+                  </SimpleSelect>
+                </FormField>
             </>
+            
           ) : (
             <>
-              <input
-                type="date"
-                name="dateOfBirth"
-                value={form.dateOfBirth}
-                onChange={handleChange}
-                className="border rounded p-2"
-              />
-              <select
-                value={form.gender}
-                onChange={(e) => setForm({ ...form, gender: e.target.value })}
-                className="border rounded p-2"
-              >
-                <option value="">เพศ</option>
-                <option value="MALE">ชาย</option>
-                <option value="FEMALE">หญิง</option>
-                <option value="OTHER">อื่นๆ</option>
-              </select>
-              <div className="flex gap-2">
-                <input
-                  type="tel"
-                  name="phone"
-                  value={form.phone}
-                  onChange={handleChange}
-                  disabled={isOtpVerified}
-                  placeholder="เบอร์โทรศัพท์"
-                  className="border rounded p-2 flex-1"
-                />
+              <div className='flex flex-row gap-1'>
+                <FormField label="ชื่อ" required>
+                  <Input
+                    type="text"
+                    placeholder="ชื่อ"
+                    name="firstName"
+                    className="w-full pt-6 pb-4 pl-2 pr-4 border rounded-xl bg-white focus:outline-none focus:ring focus:ring-paseo text-xs"
+                    onChange={handleChange}
+                    value={form.name}
+                    required
+                  />
+                </FormField>
+              </div>
+
+              <div className='flex flex-row gap-2'>
+                <FormField label="วันเกิด" required>
+                  <Popover open={opendate} onOpenChange={setOpenDate}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={`w-full justify-between rounded-xl bg-white focus:outline-none focus:ring focus:ring-paseo text-xs font-normal pt-6 pb-4 border ${!date ? "text-gray-400" : ""}`}>
+                        {date ? format(date, "dd MMMM yyyy", { locale: th }) : "เลือกวันเกิด"}
+                        <CalendarIcon className="ml-2 h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0 bg-white" align="start">
+                      <Calendar
+                        className='w-80'
+                        mode="single"
+                        captionLayout="dropdown"
+                        selected={date}
+                        onSelect={handleDateChange}
+                        fromYear={1950}
+                        toYear={new Date().getFullYear()}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </FormField>
+
+                <FormField label="เพศ" required>
+                  <SimpleSelect
+                    value={form.gender}
+                    placeholder="เลือกเพศ"
+                    onChange={(v) => setForm({ ...form, gender: v })}
+                    options={[
+                      { value: 'MALE', label: 'ชาย' },
+                      { value: 'FEMALE', label: 'หญิง' },
+                      { value: 'OTHER', label: 'อื่นๆ' },
+                    ]}
+                  />
+                </FormField>
+              </div>
+
+              
+              <div className="flex gap-2 items-center">
+                <FormField label="เบอร์โทรศัพท์" required>
+                  <Input
+                    type="tel"
+                    name="phone"
+                    value={form.phone}
+                    onChange={handleChange}
+                    placeholder="เบอร์โทรศัพท์"
+                    className="w-full pt-6 pb-4 pl-2 pr-4 border rounded-xl"
+                  />
+
+                  {phoneError && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {phoneError}
+                    </p>
+                  )}
+                </FormField>
                 {!isOtpVerified && (
                   <button
                     type="button"
                     onClick={handleSendOtp}
-                    className="px-4 py-2 bg-paseo text-white rounded-lg"
+                    className="w-40 px-4 py-2 bg-paseo text-white rounded-lg"
                   >
                     ส่ง OTP
                   </button>
                 )}
                 {isOtpVerified && (
-                  <span className="text-green-600 text-sm flex items-center">
+                  <span className="bg-paseo-hover border border-paseo-dark rounded-lg w-40 px-4 py-2 text-black text-xs flex items-center">
                     ✅ ยืนยันแล้ว
                   </span>
                 )}
               </div>
-              <input
-                name="email"
-                type="email"
-                placeholder="Email"
-                value={form.email}
-                onChange={handleChange}
-                className="border rounded p-2"
-              />
-              <select
-                value={form.branchId}
-                onChange={(e) => setForm({ ...form, branchId: e.target.value })}
-                className="border rounded p-2"
-              >
-                <option value="">เลือกสาขา</option>
-                {branches.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
+              <FormField label="อีเมล" required>
+                  <Input
+                    type="email"
+                    placeholder="อีเมล"
+                    name="email"
+                    className="w-full pt-6 pb-4 pl-2 pr-4 border rounded-xl bg-white focus:outline-none focus:ring focus:ring-paseo text-xs"
+                    onChange={handleChange}
+                    value={form.email}
+                    required
+                  />
+                </FormField>
+              <FormField label="สาขาที่สมัคร" required>
+                  <SimpleSelect
+                    value={form.branchId}
+                    placeholder="เลือกสาขา"
+                    onChange={(v) => setForm({ ...form, branchId: v })}
+                    options={branches.map((b) => ({
+                      value: b.id,
+                      label: b.name,
+                    }))}
+                  />
+                </FormField>
 
-              <input
-                name="address"
-                placeholder="ที่อยู่"
-                value={form.address}
-                onChange={handleChange}
-                className="border rounded p-2"
+                <FormField label="อาชีพ" required>
+                  <SimpleSelect
+                    value={form.occupation}
+                    placeholder="เลือกอาชีพ"
+                    onChange={(v) => setForm({ ...form, occupation: v })}
+                    options={[
+                      { value: 'STUDENT', label: 'นักศึกษา' },
+                      { value: 'PRIVATE_EMPLOYEE', label: 'พนักงานเอกชน' },
+                      { value: 'STATE_ENTERPRISE', label: 'พนักงานรัฐวิสาหกิจ' },
+                      { value: 'FREELANCER', label: 'อาชีพอิสระ' },
+                      { value: 'BUSINESS_OWNER', label: 'เจ้าของกิจการ' },
+                      { value: 'HOMEMAKER', label: 'พ่อบ้าน - แม่บ้าน' },
+                      { value: 'OTHER', label: 'อื่นๆ' },
+                    ]}
+                  />
+                </FormField>
+
+                <FormField label="ประเภทที่อยู่" required>
+                  <SimpleSelect
+                    value={form.residenceType}
+                    placeholder="เลือกประเภทที่อยู่"
+                    onChange={(v) => setForm({ ...form, residenceType: v })}
+                    options={[
+                      { value: 'TOWNHOUSE', label: 'ทาวน์เฮาส์' },
+                      { value: 'CONDO', label: 'คอนโด' },
+                      { value: 'SINGLE_HOUSE', label: 'บ้านเดี่ยว' },
+                    ]}
+                  />
+                </FormField>
+
+              <FormField label="ที่อยู่" required>
+                  <Input
+                    name="address"
+                    placeholder="ที่อยู่"
+                    className="w-full pt-6 pb-4 pl-2 pr-4 border rounded-xl bg-white focus:outline-none focus:ring focus:ring-paseo text-xs"
+                    onChange={handleChange}
+                    value={form.address}
+                  />
+                </FormField>
+
+              <ThaiAddressSelect
+                value={{
+                  province: form.province,
+                  district: form.district,
+                  subDistrict: form.subDistrict,
+                  postalCode: form.postalCode,
+                }}
+                onChange={(addr) =>
+                  setForm((f) => ({
+                    ...f,
+                    ...addr,
+                  }))
+                }
               />
-              {/* <input
-                name="houseNumber"
-                placeholder="บ้านเลขที่"
-                value={form.houseNumber}
-                onChange={handleChange}
-                className="border rounded p-2"
-              />
-              <input
-                name="district"
-                placeholder="เขต/อำเภอ"
-                value={form.district}
-                onChange={handleChange}
-                className="border rounded p-2"
-              /> */}
-              <input
-                name="province"
-                placeholder="จังหวัด"
-                value={form.province}
-                onChange={handleChange}
-                className="border rounded p-2"
-              />
-              <input
-                name="postalCode"
-                placeholder="รหัสไปรษณีย์"
-                value={form.postalCode}
-                onChange={handleChange}
-                className="border rounded p-2"
-              />
-              <div>
-                <label className="font-semibold block mb-1">ความสนใจ:</label>
-                <div className="flex flex-wrap gap-2">
-                  {interests.map((i) => (
-                    <button
-                      key={i.id}
-                      type="button"
-                      onClick={() => toggleInterest(i.id)}
-                      className={`px-3 py-1 rounded border ${
-                        form.interests.includes(i.id)
-                          ? "bg-green-500 text-white"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {i.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              
+              
             </>
           )}
         </form>

@@ -81,8 +81,8 @@ export default function UseCouponModal({ show, onClose, userCouponId }: UseCoupo
       className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50"
       style={{ backdropFilter: "blur(2px)" }}
     >
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center overflow-y-auto py-10">
-      <div className="bg-gray-100 max-w-2xl w-full rounded-3xl shadow-lg animate-fade-in">
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center overflow-y-auto pt-0 md:pb-0 pb-40">
+            <div className="bg-gray-100 max-w-2xl w-full shadow-lg animate-fade-in">
         {loading && <p className="text-center p-6 text-gray-500">กำลังโหลด...</p>}
         {error && <p className="text-center p-6 text-red-500">{error}</p>}
 
@@ -90,16 +90,16 @@ export default function UseCouponModal({ show, onClose, userCouponId }: UseCoupo
           <div className="relative overflow-hidden">
             <button
                 onClick={onClose}
-                className="absolute top-10 md:right-12 right-6 blur2 border border-gray-300 h-10 w-10 rounded-full text-xl font-bold"
+                className="absolute top-6 md:right-12 right-6 blur2 border border-gray-300 h-8 w-8 rounded-full text-xl font-bold"
             >
                 X
             </button>
             
             {/* ✅ Redeem Code */}
-            <div className="px-4 pt-8 md:px-10">
-              <div className="bg-white border rounded-xl p-4 text-center">
+            <div className="px-4 pt-4 md:pt-8 md:px-8">
+                    <div className="bg-gray-50 rounded-xl py-8 text-center">
                 <p className="text-gray-500 text-sm mb-1">รหัสสำหรับใช้คูปอง</p>
-                <p className="text-3xl font-bold tracking-widest">
+                <p className="text-2xl font-bold tracking-widest">
                   {coupon.redeemCode || "ไม่มีรหัส"}
                 </p>
               </div>
@@ -108,7 +108,7 @@ export default function UseCouponModal({ show, onClose, userCouponId }: UseCoupo
             
 
             {/* ✅ รูป */}
-            <div className="p-4 md:p-10">
+            <div className="p-4 md:p-8">
               {coupon.coupon?.imageUrl && (
                 <Image
                   width={600}
@@ -116,13 +116,14 @@ export default function UseCouponModal({ show, onClose, userCouponId }: UseCoupo
                   src={coupon.coupon.imageUrl}
                   alt={coupon.coupon.name}
                   className="w-full h-full object-cover rounded-xl shadow-md"
+                  unoptimized
                 />
               )}
             </div>
 
             {/* ✅ รายละเอียด */}
-            <div className="p-4 px-4 pt-0 md:p-10 md:pt-0">
-              <div className="flex flex-col gap-4 bg-white p-6 rounded-lg">
+            <div className="p-4 px-4 pt-0 md:px-8 md:pt-0">
+                    <div className="flex flex-col justify-between align-start gap-4 bg-white p-4 rounded-lg pb-10 md:mb-0 mb-10">
                 {coupon.coupon?.expiresAt && (
                   <p className="text-sm text-gray-500">
                     หมดอายุ:{" "}
@@ -130,7 +131,7 @@ export default function UseCouponModal({ show, onClose, userCouponId }: UseCoupo
                   </p>
                 )}
 
-                <h1 className="text-base font-bold">{coupon.coupon?.name}</h1>
+                <h1 className="text-sm font-bold">{coupon.coupon?.name}</h1>
 
                 {coupon.coupon?.description && (
                   <div className="mb-4">
@@ -146,7 +147,7 @@ export default function UseCouponModal({ show, onClose, userCouponId }: UseCoupo
             </div>
 
             {/* ✅ ปุ่มกดใช้คูปอง */}
-            <div className="md:relative fixed bottom-0 w-full bg-white border-t p-4 rounded-3xl md:rounded-b-3xl rounded-b-none flex flex-col items-center gap-2">
+            <div className="md:relative md:bottom-0 md:border-0 md:rounded-xl fixed bottom-12 max-w-2xl mx-auto bg-white w-full p-4 pb-6 md:p-8 border">
               {!coupon.used && (
                 <button
                   onClick={() => setShowConfirm(true)}

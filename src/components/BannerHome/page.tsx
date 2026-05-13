@@ -75,7 +75,7 @@ export default function BannerHomePage() {
                     alt={banner.title}
                     width={600}
                     height={600}
-                    className="object-cover w-full md:max-h-homebanner max-h-homebanner-mb h-60"
+                    className="object-cover w-full md:max-h-homebanner max-h-homebanner-mb"
                   />
                 </Link>
               </div>

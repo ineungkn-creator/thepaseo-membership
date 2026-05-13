@@ -7,8 +7,9 @@ import Image from "next/image";
 import html2canvas from "html2canvas";
 import FavoriteButton from "@/components/FavoriteButton/page";
 import { PiDotsThreeOutlineLight } from "react-icons/pi";
-import { FaRegCalendarCheck } from "react-icons/fa";
+import { CiCalendar } from "react-icons/ci";
 import { CiBitcoin } from "react-icons/ci";
+import { IoMdMore } from "react-icons/io";
 import HeaderMobile from '@/components/HeaderMobile/page';
 import ShareButton from "@/components/ShareButton/page";
 import Loading from "@/components/loading";
@@ -179,99 +180,79 @@ export default function EventSinglePage() {
   let buttonClass = "";
   let disabled = false;
 
-  if (isExpired) {
-    buttonText = "กิจกรรมสิ้นสุดแล้ว";
-    buttonClass = "btn-disable";
-    disabled = true;
-  } else if (isFull) {
-    buttonText = "กิจกรรมเต็มแล้ว";
-    buttonClass = "btn-disable";
-    disabled = true;
-  } else if (event.isJoined) {
-    buttonText = "เข้าร่วมแล้ว";
-    buttonClass = "btn-disable";
-    disabled = true;
-  } else if (insufficientPoints) {
-    buttonText = `แต้มไม่เพียงพอ (${pointBalance}/${event.pointCost})`;
-    buttonClass = "btn-disable";
-    disabled = true;
-  } else {
-    buttonText = "เข้าร่วมกิจกรรม";
-    buttonClass = "btn-main";
-  }
+  const renderJoinButton = () => {
+    let disabled = false;
+    let message = "";
 
-  return (
-      <div>
+    if (isExpired) {
+      disabled = true;
+      message = "กิจกรรมสิ้นสุดแล้ว";
+    } else if (isFull) {
+      disabled = true;
+      message = "กิจกรรมเต็มแล้ว";
+    } else if (event.isJoined) {
+      disabled = true;
+      message = "คุณเข้าร่วมแล้ว";
+    } else if (insufficientPoints) {
+      disabled = true;
+      message = `แต้มไม่เพียงพอ (${pointBalance}/${event.pointCost})`;
+    }
+
+    return (
+      <div className="flex flex-row justify-between items-center gap-4">
+        
+        {/* INFO */}
+        <div className="flex flex-col gap-1">
+
+          <p className="text-sm text-black">
+            แต้มของคุณ: <b>{pointBalance}</b> พอยต์
+          </p>
+
+          {message && (
+            <span className="text-xs text-red-500">{message}</span>
+          )}
+        </div>
+
+        {/* BUTTON */}
+        <button
+          disabled={disabled || joining}
+          onClick={() => {
+            if (!disabled) setShowConfirmModal(true);
+          }}
+          className={`py-2 px-8 rounded-full ${
+            disabled ? "bg-gray-300" : "bg-paseo"
+          }`}
+        >
+          <span className="text-sm font-bold text-white">
+            {joining ? "กำลังเข้าร่วม..." : "เข้าร่วมกิจกรรม"}
+          </span>
+        </button>
+      </div>
+    );
+  };
+
+    return (
+      <div className="pt-16">
         <HeaderMobile />
       
-        <div className="max-w-2xl mx-auto -mb-14 md:mt-20 md:-mb-16 pt-16  rounded-xl">
-          <div className="w-full px-10 md:pt-0 md:px-20 md:pb-0">
-            <UserProfile  />
-          </div>
-        </div>
         <div
           ref={captureRef}
-          className="capture relative max-w-2xl mx-auto md:pt-10 md:pb-0 pb-14 md:mb-10 pt-20 bg-gray-100 rounded-t-5xl rounded-b-xl flex flex-col md:gap-6 gap-4"
+          className="capture relative max-w-2xl mx-auto md:pt-10 md:pb-0 pb-40 md:mb-10 pt-8 md:mt-6 mt-0 bg-white rounded-xl flex flex-col md:gap-6 gap-4"
         >
-  
-          <div className="px-4 md:px-10">
-          {event.imageUrl &&
-            <Image
-              width={600}
-              height={600}
-              src={event.imageUrl}
-              alt={event.name}
-              className="w-full h-full object-cover rounded-2xl shadow border border-gray-100"
-            />
-          }
 
-        </div>
-
-         <div className="px-4 md:px-10">
-            <div className="flex flex-row justify-between align-start gap-4 bg-white md:p-6 p-4 rounded-2xl shadow border border-gray-100">
-            <div className="flex flex-col gap-3">
-              <h1 className="text-sm font-bold">{event.name}</h1>
-
-              <div className="flex flex-row item-center align-center gap-4">
-                <FaRegCalendarCheck size={24} />
-                <p className="text-sm text-gray-500">
-                  ตั้งแต่ {start_day} - {end_day} {end_month_long} {end_year} นี้
-                </p>
-              </div>
-
-            {event.pointCost > 0 && (
-              <div className="flex flex-row item-center align-center gap-4">
-                <CiBitcoin size={24} />
-                <p className="text-sm text-gray-600">ใช้แต้ม: {event.pointCost}</p>
-              </div>
+          <div className="px-8 md:px-10">
+            {event.imageUrl && (
+              <Image
+                width={600}
+                height={600}
+                src={event.imageUrl}
+                alt={event.name}
+                className="w-full h-full object-cover rounded-xl"
+                unoptimized
+              />
             )}
 
-            {event.pointEarn > 0 && (
-              <div className="flex flex-row item-center align-center gap-4">
-                <CiBitcoin size={24} />
-                <p className="text-sm text-gray-600">ได้รับแต้ม: {event.pointEarn}</p>
-              </div>
-            )}
-
-            <div className="flex flex-row item-center align-center gap-4">
-              <CiBitcoin size={24} />
-              <p className="text-sm text-gray-600">
-                แต้มของคุณ:{" "}
-                <span className="text-green-600 font-semibold">
-                  {pointBalance}
-                </span>
-              </p>
-            </div>
-
-            <div className="flex flex-row item-center align-center gap-4">
-              <CiBitcoin size={24} />
-              <p className="text-sm text-gray-600">
-                ผู้เข้าร่วม: {event.joinedCount}/{event.quantity}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-center gap-4">
+        <div className="w-full flex flex-row justify-end px-4 py-2 items-center gap-4">
             {session?.user?.id && (
               <FavoriteButton
                 targetId={event.id}
@@ -279,63 +260,92 @@ export default function EventSinglePage() {
                 userId={session.user.id}
               />
             )}
+            
+            <ShareButton
+              title={event?.name || "Event"}
+              linkShare={event?.linkShare}
+            />
+
             <button
               onClick={handleCapture}
             >
-              <PiDotsThreeOutlineLight size={24} />
+              <IoMdMore size={24} />
             </button>
-            <ShareButton title={event.name} linkShare={event.linkShare} />
           </div>
+        </div>
+
+        <div className="px-8 md:px-10">
+          <div className="flex flex-row justify-between align-start px-6">
+            <h1 className="text-sm font-bold text-center">{event.name}</h1>
+          </div>
+        </div>
+
+        <div className="px-8 md:px-10">
+          <div className="flex flex-row justify-between align-start gap-4 bg-paseo-hover md:p-6 p-4 px-6 rounded-xl">
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-row item-center align-center gap-4">
+                <CiCalendar size={24} />
+                <p className="text-sm text-black">
+                  วันที่ {start_day} - {end_day} {end_month_long} {end_year} นี้
+                </p>
+              </div>
+
+              {event.pointCost > 0 && 
+              <div className="flex flex-row item-center align-center gap-4">
+                <CiBitcoin size={24} />
+                <p className="text-sm text-black">ค่าใช้จ่าย: {event.pointCost} พอยต์</p>
+              </div>
+              }
+
+              {event.pointEarn > 0 && 
+              <div className="flex flex-row item-center align-center gap-4">
+                <CiBitcoin size={24} />
+                <p className="text-sm text-black">ผู้เข้าร่วมจะได้รับ: {event.pointEarn} พอยต์</p>
+              </div>
+              }
+
+              <div className="flex flex-row item-center align-center gap-4">
+                <CiBitcoin size={24} />
+                <p className="text-sm text-black">
+                  แต้มของคุณ: {pointBalance} พอยต์
+                </p>
+              </div>
+              
+            </div>
 
           </div>
           
         </div>
 
-        {event.description && (
-        <div className="px-4 md:px-10">
-          <div className="flex flex-col justify-between align-start gap-4 bg-white md:p-6 p-4 rounded-2xl shadow border border-gray-100">
-
-              <div>
-                <h3 className="text-sm font-bold mb-4">รายละเอียด</h3>
+        <div className="px-8 md:px-10">
+          <div className="flex flex-col justify-between align-start gap-4">
+            {event.description && (
+              <div className="mb-4">
+                <span className="text-base font-bold">รายละเอียด</span>
                 <div
-                  className="prose text-sm"
+                  className="text-sm prose text-gray-700"
                   dangerouslySetInnerHTML={{ __html: event.description }}
                 />
               </div>
+            )}
 
-            </div>
-
-        </div>
-        )}
-
-
-        {event.terms && (
-        <div className="px-4 md:px-10">
-          <div className="flex flex-col justify-between align-start gap-4 bg-white md:p-6 p-4 rounded-2xl shadow border border-gray-100">
-
+            {event.terms && (
               <div className="mb-4">
-                <h3 className="text-sm font-bold mb-4">เงื่อนไขกิจกรรม</h3>
+                <span className="text-base font-bold">เงื่อนไข</span>
                 <div
-                  className="prose text-sm"
+                  className="text-sm prose text-gray-700"
                   dangerouslySetInnerHTML={{ __html: event.terms }}
                 />
               </div>
-            </div>
+            )}
+
+          </div>
 
         </div>
-        )}
 
         {/* ✅ ปุ่มเข้าร่วม */}
-        <div className="max-w-2xl mx-auto bg-white w-full p-4 pb-4 md:p-4 md:rounded-2xl rounded-t-2xl shadow-sm border border-gray-200">
-          <button
-            disabled={disabled || joining}
-            onClick={() => {
-              if (canJoin) setShowConfirmModal(true);
-            }}
-            className={`w-full py-3 rounded-2xl shadow-md font-semibold text-white ${buttonClass}`}
-          >
-            {joining ? "กำลังเข้าร่วม..." : buttonText}
-          </button>
+        <div className="md:relative md:bottom-0 md:border-0 md:rounded-xl fixed bottom-12 max-w-2xl mx-auto bg-white w-full p-4 pb-6 md:p-8 border">
+          {renderJoinButton()}
         </div>
 
         {/* ✅ Modal ยืนยัน */}

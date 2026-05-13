@@ -183,16 +183,15 @@ export default function CouponRewardList() {
               >
                 <div className="relative w-full h-full flex flex-col shadow-lg">
                   <div className="relative w-full h-full flex flex-col gap-2 p-4 pb-2 bg-gray-100 rounded-2xl ticket-notch">
-                    <div className="w-full">
-                      {r.imageUrl && (
-                        <Image
-                          src={r.imageUrl}
-                          alt={r.name}
-                          width={100}
-                          height={100}
-                          className="w-full h-40 object-cover rounded-lg shadow-lg"
-                        />
-                      )}
+                    <div className="w-full aspect-square rounded-xl overflow-hidden bg-white">
+                      <Image
+                        src={r.imageUrl || "/main/no-image.png"}
+                        alt={r.name}
+                        width={300}
+                        height={300}
+                        className="w-full h-full object-cover"
+                        unoptimized
+                      />
                     </div>
 
                     <div className="w-full" style={{ height: "2rem" }}>

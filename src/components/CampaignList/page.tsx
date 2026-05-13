@@ -59,8 +59,8 @@ export default function CampaignList() {
 
   return (
     <div className="p-0 max-w-5xl mx-auto mb-6">
-      <div className="flex flex-row items-center justify-between mb-4">
-        <h1 className="text-xl font-bold">แคมเปญ</h1>
+      <div className="flex flex-row items-end justify-between mb-3">
+        <span className="text-base font-bold">แคมเปญ</span>
         <Link href="/campaign" className="bg-gray-100 px-2 py-1 rounded-full border border-gray-20 text-xs">
           ดูทั้งหมด
         </Link>
@@ -85,26 +85,28 @@ export default function CampaignList() {
                 {/* ส่วน card */}
                 <Link href={`/campaign/${r.id}`}>
                   <div className="embla__slide__number_campaign bg-gray-100 border rounded-2xl transition">
-                    <div className="w-40%">
-                      {r.imageUrl ? (
-                      <Image
-                        width={600}
-                        height={600}
-                        src={r.imageUrl}
-                        alt={r.name}
-                        className="w-full h-48 md:h-64 object-cover rounded-l-2xl"
-                      />
-                    ) : (
-                        <Image
-                          width={600}
-                          height={600}
-                          src='/main/no-image.png'
-                          alt={r.name}
-                          className="object-cover rounded-xl border bg-white p-6"
-                        />
-                    )}
-                    </div>
-                    <div className="flex flex-col flex-grow w-60% p-4 gap-4">
+                      <div className="w-40%">
+                        {r.imageUrl ? (
+                          <Image
+                            width={600}
+                            height={600}
+                            src={r.imageUrl}
+                            alt={r.name}
+                            className="w-full object-cover rounded-l-2xl"
+                            unoptimized
+                          />
+                          ) : (
+                            <Image
+                              width={600}
+                              height={600}
+                              src='/main/no-image.png'
+                              alt={r.name}
+                              className="object-cover rounded-xl border bg-white p-6"
+                              unoptimized
+                            />
+                          )}
+                      </div>
+                      <div className="flex flex-col flex-grow w-60% p-4 gap-2">
                         <h3 className="text-black text-base md:text-xl font-bold line-clamp-1">
                           {r.name}
                         </h3>
@@ -121,7 +123,7 @@ export default function CampaignList() {
                         />
                         </div>
                       </div>
-                  </div>
+                    </div>
                 </Link>
               </div>
             ))}
